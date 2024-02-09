@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "quizzify.sso.v1;ssov1;";
+
+service Auth {
+    rpc Register (RegisterRequest) returns (RegisterResponse);
+    rpc Login (LoginRequest) returns (LoginResponse);
+    rpc IsAdmin (IsAdminRequest) returns (IsAdminResponse);
+}
+
+message RegisterRequest {
+    string login = 1; // Login of user to register.
+    string email = 2; // Email of user to register.
+    string password = 3; // Password of user to register.
+}
+
+message RegisterResponse {
+    int64 user_id = 1; // User ID of the registered user.
+}
+
+message LoginRequest {
+    string login = 1; // Login of the user to login.
+    string email = 2; // Email of the user to login (Using when login field is empty string).
+    string password = 3; // Password of the user to login.
+    int32 app_id = 4; // App ID to login to.
+}
+
+message LoginResponse {
+    string token = 1; // Authorization token of the logged in user.
+}
+
+message IsAdminRequest {
+    int64 user_id = 1; // User ID to check if this user is admin.
+}
+
+message IsAdminResponse {
+    bool is_admin = 1; // Indicates whether the user is an admin.
+}
