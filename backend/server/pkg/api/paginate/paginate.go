@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxik12233/quizzify-online-tests/server/pkg/api"
+	"github.com/maxik12233/quizzify-online-tests/backend/server/pkg/api"
 )
 
 const (

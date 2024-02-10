@@ -1,6 +1,6 @@
 package postgres
 
-import "github.com/maxik12233/quizzify-online-tests/server/internal/repository"
+import "github.com/maxik12233/quizzify-online-tests/backend/server/internal/repository"
 
 type PostgresRepository struct {
 }

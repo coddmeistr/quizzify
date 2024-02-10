@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/maxik12233/quizzify-online-tests/server/pkg/api"
+	"github.com/maxik12233/quizzify-online-tests/backend/server/pkg/api"
 )
 
 const (
