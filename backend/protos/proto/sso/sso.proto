@@ -11,8 +11,8 @@ service Auth {
 }
 
 service Permission {
-    rpc AddPermission (AddPermissionRequest) returns (AddRermissionResponse)
-    rpc RemovePermission (RemovePermissionRequest) returns (RemoveRermissionResponse)
+    rpc AddPermission (AddPermissionRequest) returns (AddPermissionResponse);
+    rpc RemovePermission (RemovePermissionRequest) returns (RemovePermissionResponse);
 }
 
 message AddPermissionRequest {

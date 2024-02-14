@@ -175,3 +175,125 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "sso/sso.proto",
 }
+
+// PermissionClient is the client API for Permission service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type PermissionClient interface {
+	AddPermission(ctx context.Context, in *AddPermissionRequest, opts ...grpc.CallOption) (*AddPermissionResponse, error)
+	RemovePermission(ctx context.Context, in *RemovePermissionRequest, opts ...grpc.CallOption) (*RemovePermissionResponse, error)
+}
+
+type permissionClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewPermissionClient(cc grpc.ClientConnInterface) PermissionClient {
+	return &permissionClient{cc}
+}
+
+func (c *permissionClient) AddPermission(ctx context.Context, in *AddPermissionRequest, opts ...grpc.CallOption) (*AddPermissionResponse, error) {
+	out := new(AddPermissionResponse)
+	err := c.cc.Invoke(ctx, "/auth.Permission/AddPermission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *permissionClient) RemovePermission(ctx context.Context, in *RemovePermissionRequest, opts ...grpc.CallOption) (*RemovePermissionResponse, error) {
+	out := new(RemovePermissionResponse)
+	err := c.cc.Invoke(ctx, "/auth.Permission/RemovePermission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PermissionServer is the server API for Permission service.
+// All implementations must embed UnimplementedPermissionServer
+// for forward compatibility
+type PermissionServer interface {
+	AddPermission(context.Context, *AddPermissionRequest) (*AddPermissionResponse, error)
+	RemovePermission(context.Context, *RemovePermissionRequest) (*RemovePermissionResponse, error)
+	mustEmbedUnimplementedPermissionServer()
+}
+
+// UnimplementedPermissionServer must be embedded to have forward compatible implementations.
+type UnimplementedPermissionServer struct {
+}
+
+func (UnimplementedPermissionServer) AddPermission(context.Context, *AddPermissionRequest) (*AddPermissionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddPermission not implemented")
+}
+func (UnimplementedPermissionServer) RemovePermission(context.Context, *RemovePermissionRequest) (*RemovePermissionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemovePermission not implemented")
+}
+func (UnimplementedPermissionServer) mustEmbedUnimplementedPermissionServer() {}
+
+// UnsafePermissionServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to PermissionServer will
+// result in compilation errors.
+type UnsafePermissionServer interface {
+	mustEmbedUnimplementedPermissionServer()
+}
+
+func RegisterPermissionServer(s grpc.ServiceRegistrar, srv PermissionServer) {
+	s.RegisterService(&Permission_ServiceDesc, srv)
+}
+
+func _Permission_AddPermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddPermissionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PermissionServer).AddPermission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.Permission/AddPermission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PermissionServer).AddPermission(ctx, req.(*AddPermissionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Permission_RemovePermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemovePermissionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PermissionServer).RemovePermission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.Permission/RemovePermission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PermissionServer).RemovePermission(ctx, req.(*RemovePermissionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Permission_ServiceDesc is the grpc.ServiceDesc for Permission service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Permission_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "auth.Permission",
+	HandlerType: (*PermissionServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AddPermission",
+			Handler:    _Permission_AddPermission_Handler,
+		},
+		{
+			MethodName: "RemovePermission",
+			Handler:    _Permission_RemovePermission_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "sso/sso.proto",
+}
