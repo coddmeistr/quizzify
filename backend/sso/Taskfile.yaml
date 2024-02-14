@@ -1,0 +1,21 @@
+version: "3"
+
+tasks:
+  run:
+    aliases:
+      - run
+    desc: "run sso application"
+    cmds:
+      - go run cmd/sso/main.go --config=./config/local.yaml
+  migrate:
+    aliases:
+      - migrate
+    desc: "do up migrations"
+    cmds:
+      - go run cmd/migrator/main.go --postgres-url="postgres://postgres:maxgold123@localhost:5432/sso?sslmode=disable" --migrations-path=./migrations
+  test-migrate:
+    aliases:
+      - test-migrate
+    desc: "do up migrations for tests"
+    cmds:
+      - go run cmd/migrator/main.go --postgres-url="postgres://postgres:maxgold123@localhost:5432/sso?sslmode=disable" --migrations-path=./tests/migrations --migrations-table="test_migrations"

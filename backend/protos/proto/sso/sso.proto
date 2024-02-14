@@ -10,6 +10,29 @@ service Auth {
     rpc IsAdmin (IsAdminRequest) returns (IsAdminResponse);
 }
 
+service Permission {
+    rpc AddPermission (AddPermissionRequest) returns (AddRermissionResponse)
+    rpc RemovePermission (RemovePermissionRequest) returns (RemoveRermissionResponse)
+}
+
+message AddPermissionRequest {
+    int64 user_id = 1; // User ID of the user to give permission to.
+    int64 permission_id = 2; // Permission ID of given permission.
+}
+
+message AddPermissionResponse {
+    bool granted = 1; // Indicates if permission was granted.
+}
+
+message RemovePermissionRequest {
+    int64 user_id = 1; // User ID of the user to remove permission from.
+    int64 permission_id = 2; // Permission ID of removen permission.
+}
+
+message RemovePermissionResponse {
+    bool removed = 1; // Indicates if permission was removed.
+}
+
 message RegisterRequest {
     string login = 1; // Login of user to register.
     string email = 2; // Email of user to register.
