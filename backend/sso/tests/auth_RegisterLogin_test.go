@@ -24,7 +24,7 @@ const (
 func TestRegisterLogin_OK(t *testing.T) {
 	ctx, st := suits.NewDefault(t)
 
-	login := gofakeit.Word()
+	login := gofakeit.Username()
 	email := gofakeit.Email()
 	pass := randomPassword()
 	respReg, err := st.AuthClient.Register(ctx, &ssov1.RegisterRequest{

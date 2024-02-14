@@ -66,15 +66,16 @@ func (s *Storage) AddPermission(ctx context.Context, userID int64, permID int64)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := tx.QueryRow(ctx, "SELECT * FROM user_permissions WHERE user_id = $1 AND permission_id = $2", userID, permID).Scan(); err != nil {
-		if err == pgx.ErrNoRows {
-			return fmt.Errorf("%s: %w", op, storage.ErrPermissionAlreadyExist)
-		}
-
+	var c int64
+	if err := tx.QueryRow(ctx, "SELECT COUNT(*) FROM user_permissions WHERE user_id = $1 AND permission_id = $2", userID, permID).Scan(&c); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := tx.QueryRow(ctx, "INSERT INTO user_permissions(user_id, permission_id) VALUES($1, $2)", userID, permID).Scan(); err != nil {
+	if c != 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrPermissionAlreadyExist)
+	}
+
+	if _, err := tx.Exec(ctx, "INSERT INTO user_permissions(user_id, permission_id) VALUES($1, $2)", userID, permID); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -86,11 +87,11 @@ func (s *Storage) RemovePermission(ctx context.Context, userID int64, permID int
 	const op = "storage.postgres.RemovePermission"
 
 	var rowsDeleted int
-	if err := s.db.QueryRow(ctx, "DELETE FROM user_permissions WHERE user_id = $1 AND permission_id = $2", userID, permID).Scan(&rowsDeleted); err != nil {
+	if err := s.db.QueryRow(ctx, "WITH deleted AS (DELETE FROM user_permissions WHERE user_id = $1 AND permission_id = $2 RETURNING *) SELECT count(*) FROM deleted;", userID, permID).Scan(&rowsDeleted); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if rowsDeleted != 1 {
+	if rowsDeleted == 0 {
 		return fmt.Errorf("%s: %w", op, storage.ErrNoPermission)
 	}
 

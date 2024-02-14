@@ -36,7 +36,7 @@ func (s *serverAPI) AddPermission(ctx context.Context, req *ssov1.AddPermissionR
 
 	if err := s.perm.AddPermission(ctx, req.GetUserId(), req.GetPermissionId()); err != nil {
 		if errors.Is(err, permissions.ErrPermissionExist) {
-			return nil, status.Error(codes.NotFound, "already exist")
+			return nil, status.Error(codes.AlreadyExists, "already exist")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
 	}
