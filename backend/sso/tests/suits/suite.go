@@ -18,8 +18,9 @@ const (
 
 type Suite struct {
 	*testing.T
-	Cfg    *config.Config
-	Client ssov1.AuthClient
+	Cfg         *config.Config
+	AuthClient  ssov1.AuthClient
+	PermsClient ssov1.PermissionClient
 }
 
 func NewDefault(t *testing.T) (context.Context, *Suite) {
@@ -41,9 +42,10 @@ func NewDefault(t *testing.T) (context.Context, *Suite) {
 	}
 
 	return ctx, &Suite{
-		T:      t,
-		Cfg:    cfg,
-		Client: ssov1.NewAuthClient(cc),
+		T:           t,
+		Cfg:         cfg,
+		AuthClient:  ssov1.NewAuthClient(cc),
+		PermsClient: ssov1.NewPermissionClient(cc),
 	}
 }
 

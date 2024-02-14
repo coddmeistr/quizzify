@@ -7,23 +7,94 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/domain/models"
 	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/storage"
 )
 
 type Storage struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
 func New(connectionString string) (*Storage, error) {
 	const op = "storage.postgres.New"
 
-	db, err := pgx.Connect(context.Background(), connectionString)
+	pool, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &Storage{db: db}, nil
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &Storage{db: pool}, nil
+}
+
+func (s *Storage) UserPermissions(ctx context.Context, userID int64) ([]int, error) {
+	const op = "storage.postgres.UserPermissions"
+
+	rows, err := s.db.Query(ctx, "SELECT permission_id FROM user_permissions WHERE user_id = $1", userID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	perms := make([]int, 0)
+	permID := 0
+	for {
+		if !rows.Next() {
+			if err := rows.Err(); err != nil {
+				return nil, fmt.Errorf("%s: %w", op, err)
+			}
+			break
+		}
+		if err := rows.Scan(&permID); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		perms = append(perms, permID)
+	}
+
+	return perms, nil
+}
+
+func (s *Storage) AddPermission(ctx context.Context, userID int64, permID int64) error {
+	const op = "storage.postgres.AddPermission"
+
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := tx.QueryRow(ctx, "SELECT * FROM user_permissions WHERE user_id = $1 AND permission_id = $2", userID, permID).Scan(); err != nil {
+		if err == pgx.ErrNoRows {
+			return fmt.Errorf("%s: %w", op, storage.ErrPermissionAlreadyExist)
+		}
+
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := tx.QueryRow(ctx, "INSERT INTO user_permissions(user_id, permission_id) VALUES($1, $2)", userID, permID).Scan(); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	tx.Commit(ctx)
+	return nil
+}
+
+func (s *Storage) RemovePermission(ctx context.Context, userID int64, permID int64) error {
+	const op = "storage.postgres.RemovePermission"
+
+	var rowsDeleted int
+	if err := s.db.QueryRow(ctx, "DELETE FROM user_permissions WHERE user_id = $1 AND permission_id = $2", userID, permID).Scan(&rowsDeleted); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if rowsDeleted != 1 {
+		return fmt.Errorf("%s: %w", op, storage.ErrNoPermission)
+	}
+
+	return nil
 }
 
 func (s *Storage) SaveUser(ctx context.Context, login string, email string, passHash []byte) (uint64, error) {

@@ -12,16 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	appIDEmpty = 0
-	appID      = 1
-	appSecret  = "test-secret"
-
-	passDefaultLen = 10
-	deltaSeconds   = 1
-)
-
-func TestRegisterLogin_OK(t *testing.T) {
+func TestAddPermission_OK(t *testing.T) {
 	ctx, st := suits.NewDefault(t)
 
 	login := gofakeit.Word()
@@ -59,8 +50,41 @@ func TestRegisterLogin_OK(t *testing.T) {
 	assert.Equal(t, login, claims["login"].(string))
 	assert.Equal(t, appID, int(claims["app_id"].(float64)))
 	assert.InDelta(t, loginTime.Add(st.Cfg.TokenTTL).Unix(), int(claims["exp"].(float64)), deltaSeconds)
-}
+	permsInterface := claims["permissions"].([]interface{})
+	assert.Equal(t, 0, len(permsInterface))
 
-func randomPassword() string {
-	return gofakeit.Password(true, true, true, true, false, passDefaultLen)
+	// Adding permissions
+	respPerms, err := st.PermsClient.AddPermission(ctx, &ssov1.AddPermissionRequest{
+		UserId:       respReg.GetUserId(),
+		PermissionId: 2,
+	})
+	require.NoError(t, err)
+	assert.True(t, respPerms.GetGranted())
+	respPerms, err = st.PermsClient.AddPermission(ctx, &ssov1.AddPermissionRequest{
+		UserId:       respReg.GetUserId(),
+		PermissionId: 3,
+	})
+	require.NoError(t, err)
+	assert.True(t, respPerms.GetGranted())
+
+	respLogin, err = st.AuthClient.Login(ctx, &ssov1.LoginRequest{
+		Login:    login,
+		Email:    email,
+		Password: pass,
+		AppId:    appID,
+	})
+	require.NoError(t, err)
+
+	token = respLogin.GetToken()
+	assert.NotEmpty(t, token)
+
+	tokenParsed, err = jwt.Parse(respLogin.GetToken(), func(t *jwt.Token) (interface{}, error) {
+		return []byte(appSecret), nil
+	})
+	require.NoError(t, err)
+
+	claims, ok = tokenParsed.Claims.(jwt.MapClaims)
+	assert.True(t, ok)
+
+	assert.Equal(t, []interface{}{2, 3}, claims["permissions"].([]interface{}))
 }

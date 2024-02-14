@@ -23,6 +23,10 @@ type UserSaver interface {
 	SaveUser(ctx context.Context, login string, email string, passHash []byte) (uint64, error)
 }
 
+type PermissionsProvider interface {
+	UserPermissions(ctx context.Context, userID int64) ([]int, error)
+}
+
 type AppProvider interface {
 	App(ctx context.Context, appID int) (models.App, error)
 }
@@ -35,25 +39,28 @@ var (
 )
 
 type Auth struct {
-	log         *slog.Logger
-	usrSaver    UserSaver
-	usrProvider UserProvider
-	appProvider AppProvider
-	tokenTTL    time.Duration
+	log           *slog.Logger
+	usrSaver      UserSaver
+	usrProvider   UserProvider
+	permsProvider PermissionsProvider
+	appProvider   AppProvider
+	tokenTTL      time.Duration
 }
 
 func New(
 	log *slog.Logger,
 	usrSaver UserSaver,
 	usrProvider UserProvider,
+	permsProvider PermissionsProvider,
 	appProvider AppProvider,
 	tokenTTL time.Duration) *Auth {
 	return &Auth{
-		log:         log,
-		usrSaver:    usrSaver,
-		usrProvider: usrProvider,
-		appProvider: appProvider,
-		tokenTTL:    tokenTTL,
+		log:           log,
+		usrSaver:      usrSaver,
+		usrProvider:   usrProvider,
+		permsProvider: permsProvider,
+		appProvider:   appProvider,
+		tokenTTL:      tokenTTL,
 	}
 }
 
@@ -101,7 +108,14 @@ func (a *Auth) Login(ctx context.Context, login string, email string, password s
 
 	log.Info("user logged in sucesesfully")
 
-	token, err = appjwt.NewToken(user, app, a.tokenTTL)
+	perms, err := a.permsProvider.UserPermissions(ctx, int64(user.ID))
+	if err != nil {
+		log.Error("failed getting user permissions", slog.String("error", err.Error()))
+
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	token, err = appjwt.NewToken(user, perms, app, a.tokenTTL)
 	if err != nil {
 		log.Error("failed generating new token", slog.String("error", err.Error()))
 

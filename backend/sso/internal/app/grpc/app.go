@@ -8,17 +8,19 @@ import (
 
 	authgrpc "github.com/maxik12233/quizzify-online-tests/backend/sso/internal/grpc/auth"
 	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/services/auth"
+	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/services/permissions"
 	"google.golang.org/grpc"
 )
 
 type App struct {
 	log        *slog.Logger
 	authSrv    *auth.Auth
+	permSrv    *permissions.Permissions
 	gRPCServer *grpc.Server
 	port       int
 }
 
-func New(log *slog.Logger, auth *auth.Auth, port int) *App {
+func New(log *slog.Logger, auth *auth.Auth, perm *permissions.Permissions, port int) *App {
 	gRPCServer := grpc.NewServer()
 
 	authgrpc.Register(gRPCServer, auth)
@@ -26,6 +28,7 @@ func New(log *slog.Logger, auth *auth.Auth, port int) *App {
 	return &App{
 		log:        log,
 		authSrv:    auth,
+		permSrv:    perm,
 		gRPCServer: gRPCServer,
 		port:       port,
 	}
