@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Env         string        `yaml:"env" env-default:"local"`
+	Env         string        `yaFml:"env" env-default:"local"`
 	PostgresUrl string        `env:"POSTGRES_URL"`
 	TokenTTL    time.Duration `yaml:"token_ttl" env-default:"1h"`
 	GRPC        GRPCConfig    `yaml:"grpc"`
