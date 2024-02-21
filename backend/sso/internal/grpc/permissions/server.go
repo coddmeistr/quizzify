@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	ssov1 "github.com/maxik12233/quizzify-online-tests-server/backend/protos/gen/go/sso"
+	ssov1 "github.com/maxik12233/quizzify-online-tests/backend/protos/gen/go/sso"
 	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/services/permissions"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
