@@ -24,7 +24,7 @@ func (m *Metric) Register(router *mux.Router) {
 	router.Methods("GET").Path(URL).HandlerFunc(m.Heartbeat)
 }
 
-func (m *Metric) Heartbeat(w http.ResponseWriter, r *http.Request) {
+func (m *Metric) Heartbeat(w http.ResponseWriter, _ *http.Request) {
 	m.log.Info("Health check OK")
 	w.WriteHeader(204)
 }

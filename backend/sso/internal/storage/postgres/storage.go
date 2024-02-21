@@ -79,7 +79,10 @@ func (s *Storage) AddPermission(ctx context.Context, userID int64, permID int64)
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
