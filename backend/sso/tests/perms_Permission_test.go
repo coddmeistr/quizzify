@@ -6,7 +6,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/golang-jwt/jwt/v5"
-	ssov1 "github.com/maxik12233/quizzify-online-tests/backend/protos/gen/go/sso"
+	ssov1 "github.com/maxik12233/quizzify-online-tests-server/backend/protos/gen/go/sso"
 	"github.com/maxik12233/quizzify-online-tests/backend/sso/tests/suits"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -125,8 +125,8 @@ func TestRemovePermission_OK(t *testing.T) {
 	claims, ok := tokenParsed.Claims.(jwt.MapClaims)
 	assert.True(t, ok)
 
-	permsInterface := claims["permissions"].([]interface{}) // Check only permission in map, cause we only need check perms
-	assert.Equal(t, 0, len(permsInterface))                 // New user dont have any permissions
+	permsInterface := claims["permissions"].([]interface{}) // Check only permission in map, because we only need check perms
+	assert.Equal(t, 0, len(permsInterface))                 // New user don't have any permissions
 
 	// Add new permissions to this user
 	respPerms, err := st.PermsClient.AddPermission(ctx, &ssov1.AddPermissionRequest{

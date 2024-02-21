@@ -1,0 +1,21 @@
+version: "3"
+
+tasks:
+  run:
+    aliases:
+      - run
+    desc: "run tests application"
+    cmds:
+      - go run cmd/tests-server/main.go
+  up-migrate:
+    aliases:
+      - up-migrate
+    desc: "do up migrations"
+    cmds:
+      - go run cmd/migrator/main.go --migrations-path=./migrations --option="up"
+  down-migrate:
+    aliases:
+      - down-migrate
+    desc: "do down migrations"
+    cmds:
+      - go run cmd/migrator/main.go --migrations-path=./migrations --option="down"

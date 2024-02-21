@@ -17,7 +17,7 @@ type Storage struct {
 }
 
 func New(connectionString string) (*Storage, error) {
-	const op = "storage.postgres.New"
+	const op = "storage.mongoapp.New"
 
 	pool, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
@@ -32,7 +32,7 @@ func New(connectionString string) (*Storage, error) {
 }
 
 func (s *Storage) UserPermissions(ctx context.Context, userID int64) ([]int, error) {
-	const op = "storage.postgres.UserPermissions"
+	const op = "storage.mongoapp.UserPermissions"
 
 	rows, err := s.db.Query(ctx, "SELECT permission_id FROM user_permissions WHERE user_id = $1", userID)
 	if err != nil {
@@ -59,7 +59,7 @@ func (s *Storage) UserPermissions(ctx context.Context, userID int64) ([]int, err
 }
 
 func (s *Storage) AddPermission(ctx context.Context, userID int64, permID int64) error {
-	const op = "storage.postgres.AddPermission"
+	const op = "storage.mongoapp.AddPermission"
 
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
@@ -84,7 +84,7 @@ func (s *Storage) AddPermission(ctx context.Context, userID int64, permID int64)
 }
 
 func (s *Storage) RemovePermission(ctx context.Context, userID int64, permID int64) error {
-	const op = "storage.postgres.RemovePermission"
+	const op = "storage.mongoapp.RemovePermission"
 
 	var rowsDeleted int
 	if err := s.db.QueryRow(ctx, "WITH deleted AS (DELETE FROM user_permissions WHERE user_id = $1 AND permission_id = $2 RETURNING *) SELECT count(*) FROM deleted;", userID, permID).Scan(&rowsDeleted); err != nil {
@@ -99,7 +99,7 @@ func (s *Storage) RemovePermission(ctx context.Context, userID int64, permID int
 }
 
 func (s *Storage) SaveUser(ctx context.Context, login string, email string, passHash []byte) (uint64, error) {
-	const op = "storage.postgres.SaveUser"
+	const op = "storage.mongoapp.SaveUser"
 
 	var lastInsertedId uint64
 	if err := s.db.QueryRow(ctx, "INSERT INTO users(login, email, pass_hash) VALUES($1, $2, $3) RETURNING id", login, email, passHash).Scan(&lastInsertedId); err != nil {
@@ -114,7 +114,7 @@ func (s *Storage) SaveUser(ctx context.Context, login string, email string, pass
 }
 
 func (s *Storage) UserByLogin(ctx context.Context, login string) (models.User, error) {
-	const op = "storage.postgres.UserByLogin"
+	const op = "storage.mongoapp.UserByLogin"
 
 	user := models.User{}
 	if err := s.db.QueryRow(ctx, "SELECT id, login, email, pass_hash FROM users WHERE login = $1", login).Scan(&user.ID, &user.Login, &user.Email, &user.PassHash); err != nil {
@@ -128,7 +128,7 @@ func (s *Storage) UserByLogin(ctx context.Context, login string) (models.User, e
 }
 
 func (s *Storage) UserByEmail(ctx context.Context, email string) (models.User, error) {
-	const op = "storage.postgres.UserByEmail"
+	const op = "storage.mongoapp.UserByEmail"
 
 	user := models.User{}
 	if err := s.db.QueryRow(ctx, "SELECT id, login, email, pass_hash FROM users WHERE email = $1", email).Scan(&user.ID, &user.Login, &user.Email, &user.PassHash); err != nil {
@@ -142,7 +142,7 @@ func (s *Storage) UserByEmail(ctx context.Context, email string) (models.User, e
 }
 
 func (s *Storage) IsAdmin(ctx context.Context, userID uint64) (bool, error) {
-	const op = "storage.postgres.IsAdmin"
+	const op = "storage.mongoapp.IsAdmin"
 
 	var isAdmin bool
 	if err := s.db.QueryRow(ctx, "SELECT is_admin FROM users WHERE id = $1", userID).Scan(&isAdmin); err != nil {
@@ -156,7 +156,7 @@ func (s *Storage) IsAdmin(ctx context.Context, userID uint64) (bool, error) {
 }
 
 func (s *Storage) App(ctx context.Context, appID int) (models.App, error) {
-	const op = "storage.postgres.App"
+	const op = "storage.mongoapp.App"
 
 	app := models.App{}
 	if err := s.db.QueryRow(ctx, "SELECT id, name, secret FROM apps WHERE id = $1", appID).Scan(&app.ID, &app.Name, &app.Secret); err != nil {

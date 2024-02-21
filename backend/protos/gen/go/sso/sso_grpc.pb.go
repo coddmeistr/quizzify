@@ -62,7 +62,7 @@ func (c *authClient) IsAdmin(ctx context.Context, in *IsAdminRequest, opts ...gr
 	return out, nil
 }
 
-// AuthServer is the server API for Auth service.
+// AuthServer is the tests-server API for Auth service.
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
 type AuthServer interface {
@@ -210,7 +210,7 @@ func (c *permissionClient) RemovePermission(ctx context.Context, in *RemovePermi
 	return out, nil
 }
 
-// PermissionServer is the server API for Permission service.
+// PermissionServer is the tests-server API for Permission service.
 // All implementations must embed UnimplementedPermissionServer
 // for forward compatibility
 type PermissionServer interface {

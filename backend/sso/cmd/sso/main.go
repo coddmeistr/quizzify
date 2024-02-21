@@ -35,7 +35,7 @@ func main() {
 
 	// Init services
 
-	// Start server
+	// Start tests-server
 
 	// Graceful shutdown
 	stop := make(chan os.Signal, 1)

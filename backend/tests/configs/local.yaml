@@ -1,0 +1,17 @@
+env: "local"
+mongodb:
+  database-name: "quizzify-tests"
+http-server:
+  port: "8080"
+  host: "localhost"
+  timeout: 5s
+  idle-timeout: 10s
+  max-connections: 100
+  max-header-size: 1048576
+  max-body-size: 1048576
+service:
+  tests:
+    max_for_common_user: 10
+    main_image_byte_size: 4194304
+  questions:
+    max_for_common_user: 10

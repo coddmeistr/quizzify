@@ -1,7 +1,7 @@
 go 1.21.1
 
 use (
-   ./backend/server
+   ./backend/tests
    ./backend/protos
    ./backend/sso
 )
