@@ -27,3 +27,6 @@ profile:
 
 #Specify Qodana linter for analysis (Applied in CI/CD pipeline)
 linter: jetbrains/qodana-go:latest
+exclude:
+  - name: GoUnusedConst
+  - name: GoUnusedExportedFunction

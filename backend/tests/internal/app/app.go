@@ -27,13 +27,12 @@ func New(log *zap.Logger, cfg *config.Config) *App {
 	}
 }
 
-// MustRun TODO: this method creates new instances when called MustRun, fix this strange behavior
 func (a *App) MustRun() {
-	a.log.Info("starting mongo application")
+	a.log.Info("creating mongo application")
 	done := a.mongoDbApp.MustRunConcurrently()
 	<-done
 	a.log.Info("mongo application now running")
-	a.log.Info("starting rest api application")
+	a.log.Info("creating rest api application")
 	mongoStorage := mongo.New(a.mongoDbApp.Client().Database(a.cfg.MongoDB.DatabaseName))
 	a.restAPIApp = rest.New(a.log, mongoStorage, a.cfg)
 	go a.restAPIApp.MustRun()

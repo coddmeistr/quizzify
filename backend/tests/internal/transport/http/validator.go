@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/api"
+
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -47,25 +49,25 @@ func (v *Validator) Validate(w http.ResponseWriter, s interface{}) bool {
 		log.Error("failed validation on fields", zap.Error(err))
 		var valErrs validator.ValidationErrors
 		errors.As(err, &valErrs)
-		errs := make([]Error, 0, len(valErrs))
+		errs := make([]api.Error, 0, len(valErrs))
 		for _, err := range valErrs {
 			var errCode string
 			switch err.Tag() {
 			case ErrTagHigherThanMaxLimit:
 				errCode = ErrorCode(ErrMaxLimit)
 			case ErrTagLowerThanMinLimit:
-				errCode = ErrorCode(ErrMaxLimit)
+				errCode = ErrorCode(ErrMinLimit)
 			case "required":
 				errCode = ErrorCode(ErrNoRequiredValue)
 			default:
 				errCode = ErrorCode(ErrFailedValidation)
 			}
-			errs = append(errs, Error{
+			errs = append(errs, api.Error{
 				Code:    errCode,
 				Message: fmt.Sprintf("failed validation on field '%s' with tag '%s'", err.StructField(), err.Tag()),
 			})
 		}
-		WriteErrorManual(w, http.StatusBadRequest, Error{
+		WriteErrorManual(w, http.StatusBadRequest, api.Error{
 			Code:         ErrorCode(ErrFailedValidation),
 			Message:      ErrFailedValidation.Error(),
 			NestedErrors: &errs,

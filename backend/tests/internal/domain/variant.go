@@ -1,16 +1,16 @@
 package domain
 
 type VariantSingleChoice struct {
-	SingleChoiceFields []*VariantField `json:"fields" bson:"fields"`
+	SingleChoiceFields *[]*VariantField `json:"fields" bson:"fields"`
 }
 
 type VariantMultipleChoice struct {
-	MaxChoices           int             `json:"max" bson:"max"`
-	MultipleChoiceFields []*VariantField `json:"fields" bson:"fields"`
+	MaxChoices           *int             `json:"max" bson:"max"`
+	MultipleChoiceFields *[]*VariantField `json:"fields" bson:"fields"`
 }
 
 type VariantField struct {
-	Text         string        `json:"text" bson:"text"`
+	Text         *string       `json:"text" bson:"text"`
 	Image        *Image        `json:"image,omitempty" bson:"image"`
 	AnswerSimple *AnswerSimple `json:"answer_simple,omitempty" bson:"answer_simple"`
 }

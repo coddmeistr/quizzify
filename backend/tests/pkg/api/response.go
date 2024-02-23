@@ -1,4 +1,4 @@
-package http
+package api
 
 import (
 	"encoding/json"
@@ -34,13 +34,12 @@ func WriteErrorManual(w http.ResponseWriter, code int, e Error) {
 	}
 }
 
-func WriteError(w http.ResponseWriter, e error) {
-	code := CodeFromError(e)
+func WriteError(w http.ResponseWriter, code int, ecode string, msg string) {
 	bytes, err := json.Marshal(&Response{
 		Code: code,
 		Error: &Error{
-			Code:    ErrorCode(e),
-			Message: e.Error(),
+			Code:    ecode,
+			Message: msg,
 		},
 		Payload: nil,
 	})
@@ -55,12 +54,11 @@ func WriteError(w http.ResponseWriter, e error) {
 	}
 }
 
-func WriteErrorMessage(w http.ResponseWriter, e error, msg string) {
-	code := CodeFromError(e)
+func WriteErrorMessage(w http.ResponseWriter, code int, ecode string, msg string) {
 	bytes, err := json.Marshal(&Response{
 		Code: code,
 		Error: &Error{
-			Code:    ErrorCode(e),
+			Code:    ecode,
 			Message: msg,
 		},
 		Payload: nil,

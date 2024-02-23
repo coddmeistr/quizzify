@@ -2,10 +2,9 @@ package sort
 
 import (
 	"context"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/api"
 	"net/http"
 	"strings"
-
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/api"
 )
 
 const (
@@ -34,16 +33,7 @@ func Middleware(defaultSortField string, defaultSortOrder string) func(next http
 			} else {
 				upperSortOrder := strings.ToUpper(sortOrder)
 				if upperSortOrder != ASC && upperSortOrder != DESC {
-					w.WriteHeader(http.StatusBadRequest)
-					apiErr := api.ErrorResponse{
-						Message: "collation must be asc or desc",
-						Details: nil,
-					}
-					// TODO: better error handling
-					_, err := w.Write(apiErr.Marshal())
-					if err != nil {
-						return
-					}
+					api.WriteErrorMessage(w, http.StatusBadRequest, "INVALID_SORT_ORDER", "invalid sort order")
 					return
 				}
 			}

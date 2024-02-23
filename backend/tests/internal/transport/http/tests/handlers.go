@@ -11,7 +11,6 @@ import (
 	testsservice "github.com/maxik12233/quizzify-online-tests/backend/tests/internal/service/tests"
 	ahttp "github.com/maxik12233/quizzify-online-tests/backend/tests/internal/transport/http"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/httputil"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/slice"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -19,11 +18,17 @@ import (
 type Service interface {
 	CreateTest(ctx context.Context, test domain.Test) error
 	UpdateTest(ctx context.Context, testID string, test domain.Test) error
+	DeleteTest(ctx context.Context, testID string) error
+	GetTestByID(ctx context.Context, testID string) (*domain.Test, error)
+	GetTests(ctx context.Context) ([]*domain.Test, error)
 }
 
 const (
 	createTestUrl        = "/tests"
 	updateTestPreviewUrl = "/tests/{test_id}/preview"
+	deleteTestUrl        = "/tests/{test_id}"
+	getTestsUrl          = "/tests"
+	getTestUrl           = "/tests/{test_id}"
 )
 
 type Handlers struct {
@@ -45,8 +50,81 @@ func New(log *zap.Logger, cfg *config.Config, srv Service) *Handlers {
 }
 
 func (h *Handlers) Register(router *mux.Router) {
-	router.Methods(http.MethodPost).Path(createTestUrl).HandlerFunc(h.CreateTest)
-	router.Methods(http.MethodPut).Path(updateTestPreviewUrl).HandlerFunc(h.UpdateTestPreview)
+	router.Methods(http.MethodGet).Path(getTestsUrl).HandlerFunc(h.GetTests)
+	router.Methods(http.MethodGet).Path(getTestUrl).HandlerFunc(h.GetTest)
+
+	auth := router.PathPrefix("").Subrouter()
+	auth.Use(
+		user.AuthMiddleware(user.Admin),
+	)
+	auth.Methods(http.MethodPost).Path(createTestUrl).HandlerFunc(h.CreateTest)
+	auth.Methods(http.MethodPut).Path(updateTestPreviewUrl).HandlerFunc(h.UpdateTestPreview)
+	auth.Methods(http.MethodDelete).Path(deleteTestUrl).HandlerFunc(h.DeleteTest)
+}
+
+func (h *Handlers) GetTests(w http.ResponseWriter, r *http.Request) {
+	const op = "tests.handlers.GetTests"
+	log := h.log.With(zap.String("op", op))
+
+	tests, err := h.srv.GetTests(r.Context())
+	if err != nil {
+		log.Error("failed to get tests", zap.Error(err))
+		ahttp.WriteError(w, ahttp.ErrInternal)
+		return
+	}
+
+	ahttp.WriteResponse(w, http.StatusOK, tests)
+}
+
+func (h *Handlers) GetTest(w http.ResponseWriter, r *http.Request) {
+	const op = "tests.handlers.GetTest"
+	log := h.log.With(zap.String("op", op))
+
+	testID, ok := mux.Vars(r)["test_id"]
+	if !ok || testID == "" {
+		log.Error("failed to get test id from url path")
+		ahttp.WriteErrorMessage(w, ahttp.ErrNoRequiredValue, "no test id in url path")
+		return
+	}
+
+	test, err := h.srv.GetTestByID(r.Context(), testID)
+	if err != nil {
+		if errors.Is(err, testsservice.ErrNotFound) {
+			log.Error("test not found", zap.Error(err))
+			ahttp.WriteError(w, ahttp.ErrNotFound)
+			return
+		}
+		log.Error("failed to get test", zap.Error(err))
+		ahttp.WriteError(w, ahttp.ErrInternal)
+		return
+	}
+
+	ahttp.WriteResponse(w, http.StatusOK, test)
+}
+
+func (h *Handlers) DeleteTest(w http.ResponseWriter, r *http.Request) {
+	const op = "tests.handlers.DeleteTest"
+	log := h.log.With(zap.String("op", op))
+
+	testID, ok := mux.Vars(r)["test_id"]
+	if !ok || testID == "" {
+		log.Error("failed to get test id from url path")
+		ahttp.WriteErrorMessage(w, ahttp.ErrNoRequiredValue, "no test id in url path")
+		return
+	}
+
+	if err := h.srv.DeleteTest(r.Context(), testID); err != nil {
+		if errors.Is(err, testsservice.ErrNotFound) {
+			log.Error("test not found", zap.Error(err))
+			ahttp.WriteError(w, ahttp.ErrNotFound)
+			return
+		}
+		log.Error("failed to delete test", zap.Error(err))
+		ahttp.WriteError(w, ahttp.ErrInternal)
+		return
+	}
+
+	ahttp.WriteResponse(w, http.StatusOK, "test was deleted")
 }
 
 func (h *Handlers) CreateTest(w http.ResponseWriter, r *http.Request) {
@@ -65,14 +143,17 @@ func (h *Handlers) CreateTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInfo, ok := user.GetUserInfoFromContext(r.Context())
-	if !ok || (userInfo.ID != int(req.Test.UserID) && !slice.Contains(userInfo.Permissions, user.Admin)) {
-		log.Error("failed to get user info or no rights", zap.Any("userInfo", userInfo))
+	userInfo, ok := user.SubjectUserFromContext(r.Context())
+	if !ok {
+		log.Error("failed to get user info", zap.Any("user_info", userInfo))
 		ahttp.WriteError(w, ahttp.ErrForbidden)
 		return
 	}
 
-	if err := h.srv.CreateTest(r.Context(), *req.Test.ToDomain()); err != nil {
+	dt := *req.Test.ToDomain()
+	dt.UserID = &userInfo.ID
+
+	if err := h.srv.CreateTest(r.Context(), dt); err != nil {
 		if errors.Is(err, testsservice.ErrInvalidTestType) {
 			ahttp.WriteError(w, ahttp.ErrInvalidTestType)
 			return
@@ -92,6 +173,7 @@ func (h *Handlers) CreateTest(w http.ResponseWriter, r *http.Request) {
 	ahttp.WriteResponse(w, http.StatusCreated, "test was created")
 }
 
+// UpdateTestPreview TODO: Refactor subject id logic, handler and service dont validating that test with given testID belongs to subject and auth user
 func (h *Handlers) UpdateTestPreview(w http.ResponseWriter, r *http.Request) {
 	const op = "tests.handlers.UpdateTestPreview"
 	log := h.log.With(zap.String("op", op))
@@ -115,14 +197,16 @@ func (h *Handlers) UpdateTestPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInfo, ok := user.GetUserInfoFromContext(r.Context())
-	if !ok || (userInfo.ID != req.UserID && !slice.Contains(userInfo.Permissions, user.Admin)) {
-		log.Error("failed to get user info or no rights", zap.Any("userInfo", userInfo))
-		ahttp.WriteError(w, ahttp.ErrForbidden)
-		return
-	}
+	//userInfo, ok := user.SubjectUserFromContext(r.Context())
+	//if !ok {
+	//	log.Error("failed to get user info", zap.Any("user_info", userInfo))
+	//	ahttp.WriteError(w, ahttp.ErrForbidden)
+	//	return
+	//}
 
-	if err := h.srv.UpdateTest(r.Context(), testID, *req.ToDomain()); err != nil {
+	dt := *req.ToDomain()
+
+	if err := h.srv.UpdateTest(r.Context(), testID, dt); err != nil {
 		if errors.Is(err, testsservice.ErrNotFound) {
 			ahttp.WriteError(w, ahttp.ErrNotFound)
 			return

@@ -42,38 +42,12 @@ func New(log *zap.Logger, storage *mongo.Storage, cfg *config.Config) *App {
 }
 
 func (a *App) MustRun() {
-	a.log.Info("configuring rest api server")
+	a.log.Info("attempting to run rest api application")
 
-	// TODO: move server configuration
-	router := mux.NewRouter()
-	router.Use(
-		cors.Middleware,
-		logging.RequestLogger(a.log),
-		logging.ResponseLogger(a.log),
-		paginate.Middleware(0, 5),  // TODO: create config values for paginate and sort middleware
-		sort.Middleware("", "ASC"), // TODO: apply paginate and sort middleware only for needed routes
-		user.Middleware(),
-	)
-
-	// Registering metrics endpoints
-	m := metrics.New(a.log)
-	m.Register(router)
-
-	apiRouter := router.PathPrefix("/api").Subrouter()
-	a.testHandlers.Register(apiRouter)
-
-	addr := fmt.Sprintf("%s:%s", a.cfg.HTTPServer.Host, a.cfg.HTTPServer.Port)
-	srv := &http.Server{
-		Addr:         addr,
-		WriteTimeout: a.cfg.HTTPServer.Timeout,
-		ReadTimeout:  a.cfg.HTTPServer.Timeout,
-		IdleTimeout:  a.cfg.HTTPServer.IdleTimeout,
-		Handler:      router,
-	}
-	a.server = srv
+	server := a.createServer()
 
 	a.log.Info("starting server on port " + a.cfg.HTTPServer.Port)
-	if err := srv.ListenAndServe(); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
 			a.log.Info("server shutdown")
 			return
@@ -96,4 +70,37 @@ func (a *App) Stop() error {
 
 	a.log.Info("rest api server shutdown successful")
 	return nil
+}
+
+func (a *App) createServer() *http.Server {
+	a.log.Info("creating rest api server")
+
+	router := mux.NewRouter()
+	router.Use(
+		cors.Middleware,
+		logging.RequestLogger(a.log),
+		paginate.Middleware(a.cfg.Other.DefaultPage, a.cfg.Other.DefaultPerPage),
+		sort.Middleware(a.cfg.Other.DefaultSortField, a.cfg.Other.DefaultSortOrder),
+		user.Middleware(),
+	)
+
+	// Registering metrics endpoints
+	m := metrics.New(a.log)
+	m.Register(router)
+
+	apiRouter := router.PathPrefix("/api").Subrouter()
+	a.testHandlers.Register(apiRouter)
+
+	addr := fmt.Sprintf("%s:%s", a.cfg.HTTPServer.Host, a.cfg.HTTPServer.Port)
+	srv := &http.Server{
+		Addr:         addr,
+		WriteTimeout: a.cfg.HTTPServer.Timeout,
+		ReadTimeout:  a.cfg.HTTPServer.Timeout,
+		IdleTimeout:  a.cfg.HTTPServer.IdleTimeout,
+		Handler:      router,
+	}
+	a.server = srv
+
+	a.log.Info("rest api server created successfully")
+	return srv
 }

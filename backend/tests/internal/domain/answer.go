@@ -1,5 +1,5 @@
 package domain
 
 type AnswerSimple struct {
-	IsCorrect bool `bson:"is_correct"`
+	IsCorrect *bool `bson:"is_correct"`
 }

@@ -21,7 +21,7 @@ var (
 	ErrNotFound             = errors.New("not found")
 )
 
-var codes map[error]string = map[error]string{
+var codes = map[error]string{
 	ErrInvalidJSONBody:      "INVALID_JSON_BODY",
 	ErrInternal:             "INTERNAL",
 	ErrMaxLimit:             "MAX_LIMIT",

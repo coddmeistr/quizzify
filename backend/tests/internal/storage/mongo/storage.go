@@ -25,6 +25,30 @@ func New(db *mongo.Database) *Storage {
 	}
 }
 
+func (s *Storage) GetTests(ctx context.Context) ([]*domain.Test, error) {
+	const op = "mongo.storage.GetTests"
+
+	tests := make([]*domain.Test, 0)
+	cursor, err := s.db.Collection(testsCollection).Find(ctx, bson.D{})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer func() { _ = cursor.Close(ctx) }()
+
+	for cursor.Next(ctx) {
+		var test domain.Test
+		if err := cursor.Decode(&test); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		tests = append(tests, &test)
+	}
+	if cursor.Err() != nil {
+		return nil, fmt.Errorf("%s: %w", op, cursor.Err())
+	}
+
+	return tests, nil
+}
+
 func (s *Storage) CreateTest(ctx context.Context, test domain.Test) error {
 	const op = "mongo.storage.CreateTest"
 
@@ -39,12 +63,15 @@ func (s *Storage) CreateTest(ctx context.Context, test domain.Test) error {
 func (s *Storage) DeleteTest(ctx context.Context, testID string) error {
 	const op = "mongo.storage.DeleteTest"
 
-	_, err := s.db.Collection(testsCollection).DeleteOne(ctx, domain.Test{ID: testID})
+	res, err := s.db.Collection(testsCollection).DeleteOne(ctx, bson.D{{"_id", testID}})
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return fmt.Errorf("%s: %w", op, storage.ErrNotFound)
 		}
 		return fmt.Errorf("%s: %w", op, err)
+	}
+	if res.DeletedCount == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrNotFound)
 	}
 
 	return nil
@@ -54,7 +81,7 @@ func (s *Storage) GetTestByID(ctx context.Context, testID string) (*domain.Test,
 	const op = "mongo.storage.GetTestByID"
 
 	var test domain.Test
-	err := s.db.Collection(testsCollection).FindOne(ctx, domain.Test{ID: testID}).Decode(&test)
+	err := s.db.Collection(testsCollection).FindOne(ctx, bson.D{{"_id", testID}}).Decode(&test)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, fmt.Errorf("%s: %w", op, storage.ErrNotFound)
@@ -69,8 +96,8 @@ func (s *Storage) UpdateTest(ctx context.Context, testID string, toUpdate domain
 	const op = "mongo.storage.UpdateTest"
 
 	// Prepare values to update only for non-nil fields
-	val := reflect.ValueOf(toUpdate)
 	bsonToUpdate := make([]bson.E, 0)
+	val := reflect.ValueOf(toUpdate)
 	for i := 0; i < val.NumField(); i++ {
 		if val.Field(i).Kind() == reflect.Pointer && val.Field(i).IsNil() {
 			continue

@@ -15,7 +15,7 @@ import (
 func main() {
 	var connectionString, migrationsPath, migrationsTable string
 
-	flag.StringVar(&connectionString, "mongoapp-url", "", "connection string")
+	flag.StringVar(&connectionString, "postgres-url", "", "connection string")
 	flag.StringVar(&migrationsPath, "migrations-path", "", "where migrations files")
 	flag.StringVar(&migrationsTable, "migrations-table", "migrations", "name of the migrations table")
 	flag.Parse()
@@ -28,7 +28,7 @@ func main() {
 		panic("migrations-path is empty")
 	}
 
-	db, err := sql.Open("mongoapp", connectionString)
+	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +39,7 @@ func main() {
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://"+migrationsPath,
-		"mongoapp", driver)
+		"postgres", driver)
 	if err != nil {
 		panic(err)
 	}

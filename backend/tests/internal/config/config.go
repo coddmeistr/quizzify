@@ -10,9 +10,10 @@ import (
 
 type Config struct {
 	Env        string     `yaml:"env" env-required:"true"`
-	HTTPServer HTTPServer `yaml:"http-server"`
-	MongoDB    MongoDB    `yaml:"mongodb"`
+	HTTPServer HTTPServer `yaml:"http-server" env-required:"true"`
+	MongoDB    MongoDB    `yaml:"mongodb" env-required:"true"`
 	Service    Service    `yaml:"service" env-required:"true"`
+	Other      Other      `yaml:"other" env-required:"true"`
 }
 
 type HTTPServer struct {
@@ -28,6 +29,13 @@ type HTTPServer struct {
 type MongoDB struct {
 	ConnectionURI string `env:"MONGO_CONNECTION_URI" env-required:"true"`
 	DatabaseName  string `yaml:"database-name" env-default:"quizzify-tests"`
+}
+
+type Other struct {
+	DefaultPage      int    `yaml:"default_page" env-default:"1"`
+	DefaultPerPage   int    `yaml:"default_per_page" env-default:"5"`
+	DefaultSortField string `yaml:"default_sort_field" env-default:""`
+	DefaultSortOrder string `yaml:"default_sort_order" env-default:"ASC"`
 }
 
 func MustLoad() *Config {

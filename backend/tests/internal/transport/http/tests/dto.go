@@ -6,12 +6,11 @@ import (
 )
 
 type UpdateTestPreviewRequest struct {
-	UserID    int      `json:"user_id" validate:"required,gte=1"`
-	Title     string   `json:"title"`
-	ShortText string   `json:"short_text"`
-	LongText  string   `json:"long_text"`
-	MainImage *Image   `json:"main_image"`
-	Tags      []string `json:"tags"`
+	Title     *string   `json:"title"`
+	ShortText *string   `json:"short_text"`
+	LongText  *string   `json:"long_text"`
+	MainImage *Image    `json:"main_image"`
+	Tags      *[]string `json:"tags"`
 }
 
 type CreateTestRequest struct {
@@ -19,31 +18,30 @@ type CreateTestRequest struct {
 }
 
 type Test struct {
-	Title     string      `json:"title" validate:"required"`
-	UserID    int32       `json:"user_id" validate:"required,gte=1"`
-	Type      string      `json:"type" validate:"required"`
-	ShortText string      `json:"short_text" validate:"required"`
-	LongText  string      `json:"long_text" validate:"required"`
-	MainImage *Image      `json:"main_image"`
-	Questions []*Question `json:"questions" validate:"required,gte=1,dive"`
-	Tags      []string    `json:"tags"`
+	Title     *string      `json:"title" validate:"required"`
+	Type      *string      `json:"type" validate:"required"`
+	ShortText *string      `json:"short_text" validate:"required"`
+	LongText  *string      `json:"long_text" validate:"required"`
+	MainImage *Image       `json:"main_image" validate:"required"`
+	Questions *[]*Question `json:"questions" validate:"required,gte=1,dive"`
+	Tags      *[]string    `json:"tags"`
 }
 
 type Question struct {
-	Type      string    `json:"type" validate:"required"`
-	LongText  string    `json:"long_text"`
-	ShortText string    `json:"short_text" validate:"required"`
-	Required  bool      `json:"required"`
+	Type      *string   `json:"type" validate:"required"`
+	LongText  *string   `json:"long_text"`
+	ShortText *string   `json:"short_text" validate:"required"`
+	Required  *bool     `json:"required"`
 	Variants  *Variants `json:"variants" validate:"required,dive"`
 }
 
 type Image struct {
-	Name    string `json:"name"`
-	Content []byte `json:"content"`
+	Name    *string `json:"name"`
+	Content *[]byte `json:"content"`
 }
 
 type VariantField struct {
-	Text         string        `json:"text" validate:"required"`
+	Text         *string       `json:"text" validate:"required"`
 	Image        *Image        `json:"image"`
 	SimpleAnswer *SimpleAnswer `json:"simple_answer"`
 }
@@ -54,24 +52,24 @@ type Variants struct {
 }
 
 type VariantSingleChoice struct {
-	SingleChoiceFields []*VariantField `json:"fields" validate:"required,dive"`
+	SingleChoiceFields *[]*VariantField `json:"fields" validate:"required,dive"`
 }
 
 type VariantMultipleChoice struct {
-	MaxChoices           int             `json:"max" validate:"gte=1"`
-	MultipleChoiceFields []*VariantField `json:"fields" validate:"required,dive"`
+	MaxChoices           *int             `json:"max" validate:"gte=1"`
+	MultipleChoiceFields *[]*VariantField `json:"fields" validate:"required,dive"`
 }
 
 type SimpleAnswer struct {
-	IsCorrect bool `json:"is_correct"`
+	IsCorrect *bool `json:"is_correct"`
 }
 
 func (t *Test) ToDomain() *domain.Test {
 
 	id := uuid.New().String()
 
-	domainQuestions := make([]*domain.Question, 0, len(t.Questions))
-	for _, v := range t.Questions {
+	domainQuestions := make([]*domain.Question, 0, len(*t.Questions))
+	for _, v := range *t.Questions {
 		domainQuestions = append(domainQuestions, v.ToDomain())
 	}
 
@@ -81,15 +79,14 @@ func (t *Test) ToDomain() *domain.Test {
 	}
 
 	return &domain.Test{
-		ID:        id,
-		UserID:    t.UserID,
+		ID:        &id,
 		Title:     t.Title,
 		Type:      t.Type,
 		ShortText: t.ShortText,
 		LongText:  t.LongText,
 		MainImage: domainImage,
 		Tags:      t.Tags,
-		Questions: domainQuestions,
+		Questions: &domainQuestions,
 	}
 }
 
@@ -110,7 +107,7 @@ func (q *Question) ToDomain() *domain.Question {
 	}
 
 	return &domain.Question{
-		ID:        id,
+		ID:        &id,
 		Type:      q.Type,
 		LongText:  q.LongText,
 		ShortText: q.ShortText,
@@ -137,26 +134,26 @@ func (a *Variants) ToDomain() *domain.Variants {
 }
 
 func (a VariantMultipleChoice) ToDomain() *domain.VariantMultipleChoice {
-	domainFields := make([]*domain.VariantField, 0, len(a.MultipleChoiceFields))
-	for _, v := range a.MultipleChoiceFields {
+	domainFields := make([]*domain.VariantField, 0, len(*a.MultipleChoiceFields))
+	for _, v := range *a.MultipleChoiceFields {
 		domainFields = append(domainFields, v.ToDomain())
 	}
 
 	return &domain.VariantMultipleChoice{
 		MaxChoices:           a.MaxChoices,
-		MultipleChoiceFields: domainFields,
+		MultipleChoiceFields: &domainFields,
 	}
 }
 
 func (a VariantSingleChoice) ToDomain() *domain.VariantSingleChoice {
 
-	domainFields := make([]*domain.VariantField, 0, len(a.SingleChoiceFields))
-	for _, v := range a.SingleChoiceFields {
+	domainFields := make([]*domain.VariantField, 0, len(*a.SingleChoiceFields))
+	for _, v := range *a.SingleChoiceFields {
 		domainFields = append(domainFields, v.ToDomain())
 	}
 
 	return &domain.VariantSingleChoice{
-		SingleChoiceFields: domainFields,
+		SingleChoiceFields: &domainFields,
 	}
 }
 
