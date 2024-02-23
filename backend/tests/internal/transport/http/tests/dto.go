@@ -19,6 +19,7 @@ type CreateTestRequest struct {
 
 type Test struct {
 	Title     *string      `json:"title" validate:"required"`
+	CreatorID *int         `json:"creator_id" validate:"required"`
 	Type      *string      `json:"type" validate:"required"`
 	ShortText *string      `json:"short_text" validate:"required"`
 	LongText  *string      `json:"long_text" validate:"required"`
@@ -81,6 +82,7 @@ func (t *Test) ToDomain() *domain.Test {
 	return &domain.Test{
 		ID:        &id,
 		Title:     t.Title,
+		UserID:    t.CreatorID,
 		Type:      t.Type,
 		ShortText: t.ShortText,
 		LongText:  t.LongText,

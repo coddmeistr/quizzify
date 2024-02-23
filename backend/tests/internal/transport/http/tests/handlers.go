@@ -11,6 +11,7 @@ import (
 	testsservice "github.com/maxik12233/quizzify-online-tests/backend/tests/internal/service/tests"
 	ahttp "github.com/maxik12233/quizzify-online-tests/backend/tests/internal/transport/http"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/httputil"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/slice"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -54,9 +55,6 @@ func (h *Handlers) Register(router *mux.Router) {
 	router.Methods(http.MethodGet).Path(getTestUrl).HandlerFunc(h.GetTest)
 
 	auth := router.PathPrefix("").Subrouter()
-	auth.Use(
-		user.AuthMiddleware(user.Admin),
-	)
 	auth.Methods(http.MethodPost).Path(createTestUrl).HandlerFunc(h.CreateTest)
 	auth.Methods(http.MethodPut).Path(updateTestPreviewUrl).HandlerFunc(h.UpdateTestPreview)
 	auth.Methods(http.MethodDelete).Path(deleteTestUrl).HandlerFunc(h.DeleteTest)
@@ -119,6 +117,11 @@ func (h *Handlers) DeleteTest(w http.ResponseWriter, r *http.Request) {
 			ahttp.WriteError(w, ahttp.ErrNotFound)
 			return
 		}
+		if errors.Is(err, testsservice.ErrNoRights) {
+			log.Error("forbidden action", zap.Error(err))
+			ahttp.WriteErrorMessage(w, ahttp.ErrForbidden, "no rights to delete test")
+			return
+		}
 		log.Error("failed to delete test", zap.Error(err))
 		ahttp.WriteError(w, ahttp.ErrInternal)
 		return
@@ -143,17 +146,14 @@ func (h *Handlers) CreateTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInfo, ok := user.SubjectUserFromContext(r.Context())
-	if !ok {
-		log.Error("failed to get user info", zap.Any("user_info", userInfo))
+	authUser, ok := user.AuthUserFromContext(r.Context())
+	if !ok || (authUser.ID != *req.Test.CreatorID && slice.MaxInt(authUser.Permissions) < user.Admin) {
+		log.Error("forbidden action")
 		ahttp.WriteError(w, ahttp.ErrForbidden)
 		return
 	}
 
-	dt := *req.Test.ToDomain()
-	dt.UserID = &userInfo.ID
-
-	if err := h.srv.CreateTest(r.Context(), dt); err != nil {
+	if err := h.srv.CreateTest(r.Context(), *req.Test.ToDomain()); err != nil {
 		if errors.Is(err, testsservice.ErrInvalidTestType) {
 			ahttp.WriteError(w, ahttp.ErrInvalidTestType)
 			return
@@ -173,7 +173,6 @@ func (h *Handlers) CreateTest(w http.ResponseWriter, r *http.Request) {
 	ahttp.WriteResponse(w, http.StatusCreated, "test was created")
 }
 
-// UpdateTestPreview TODO: Refactor subject id logic, handler and service dont validating that test with given testID belongs to subject and auth user
 func (h *Handlers) UpdateTestPreview(w http.ResponseWriter, r *http.Request) {
 	const op = "tests.handlers.UpdateTestPreview"
 	log := h.log.With(zap.String("op", op))
@@ -197,18 +196,13 @@ func (h *Handlers) UpdateTestPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//userInfo, ok := user.SubjectUserFromContext(r.Context())
-	//if !ok {
-	//	log.Error("failed to get user info", zap.Any("user_info", userInfo))
-	//	ahttp.WriteError(w, ahttp.ErrForbidden)
-	//	return
-	//}
-
-	dt := *req.ToDomain()
-
-	if err := h.srv.UpdateTest(r.Context(), testID, dt); err != nil {
+	if err := h.srv.UpdateTest(r.Context(), testID, *req.ToDomain()); err != nil {
 		if errors.Is(err, testsservice.ErrNotFound) {
 			ahttp.WriteError(w, ahttp.ErrNotFound)
+			return
+		}
+		if errors.Is(err, testsservice.ErrNoRights) {
+			ahttp.WriteErrorMessage(w, ahttp.ErrForbidden, "no rights to update test")
 			return
 		}
 		ahttp.WriteError(w, ahttp.ErrInternal)

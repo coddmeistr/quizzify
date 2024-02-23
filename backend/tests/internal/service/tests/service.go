@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/helpers/user"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/storage"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/slice"
 	"go.uber.org/zap"
 )
 
@@ -80,6 +82,22 @@ func (s *Service) DeleteTest(ctx context.Context, testID string) error {
 	log := s.log.With(zap.String("op", op))
 	log.Info("starting test deletion")
 
+	test, err := s.storage.GetTestByID(ctx, testID)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			log.Warn("test not found")
+			return fmt.Errorf("%s: %w", op, ErrNotFound)
+		}
+		log.Error("failed to get test", zap.Error(err))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	authUser, ok := user.AuthUserFromContext(ctx)
+	if !ok || (authUser.ID != *test.UserID && slice.MaxInt(authUser.Permissions) < user.Admin) {
+		log.Error("forbidden action")
+		return fmt.Errorf("%s: %w", op, ErrNoRights)
+	}
+
 	if err := s.storage.DeleteTest(ctx, testID); err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			log.Warn("test not found")
@@ -137,12 +155,28 @@ func (s *Service) CreateTest(ctx context.Context, test domain.Test) error {
 	return nil
 }
 
-func (s *Service) UpdateTest(ctx context.Context, testID string, test domain.Test) error {
+func (s *Service) UpdateTest(ctx context.Context, testID string, update domain.Test) error {
 	const op = "service.testsservice.UpdateTest"
 	log := s.log.With(zap.String("op", op))
 	log.Info("updating test")
 
-	if err := s.storage.UpdateTest(ctx, testID, test); err != nil {
+	test, err := s.storage.GetTestByID(ctx, testID)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			log.Warn("test not found")
+			return fmt.Errorf("%s: %w", op, ErrNotFound)
+		}
+		log.Error("failed to get test", zap.Error(err))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	authUser, ok := user.AuthUserFromContext(ctx)
+	if !ok || (authUser.ID != *test.UserID && slice.MaxInt(authUser.Permissions) < user.Admin) {
+		log.Error("forbidden action")
+		return fmt.Errorf("%s: %w", op, ErrNoRights)
+	}
+
+	if err := s.storage.UpdateTest(ctx, testID, update); err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			s.log.Error("test not found", zap.Error(err))
 			return fmt.Errorf("%s: %w", op, ErrNotFound)

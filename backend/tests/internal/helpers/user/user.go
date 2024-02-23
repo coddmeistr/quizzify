@@ -9,12 +9,12 @@ import (
 
 const (
 	AuthInfoKey    = "AuthUserInfo"
-	SubjectInfoKey = "SubjectUserInfo"
+	SubjectInfoKey = "SubjectUserInfo" // Deprecated
 )
 
 const (
 	authUserInfoHeader    = "Auth-User-Info"
-	subjectUserInfoHeader = "Subject-User-Info"
+	subjectUserInfoHeader = "Subject-User-Info" // Deprecated
 )
 
 type Info struct {
@@ -31,6 +31,7 @@ const (
 	Admin     = 3
 )
 
+// AuthMiddleware TODO: Remove this method, no longer needed
 func AuthMiddleware(lowestRoleForIndependentAccess int) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -68,9 +69,7 @@ func AuthMiddleware(lowestRoleForIndependentAccess int) func(http.Handler) http.
 func Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 			r = writeAuthUserInfo(r)
-			r = writeSubjectUserInfo(r)
 
 			next.ServeHTTP(w, r)
 		})
@@ -101,6 +100,7 @@ func writeAuthUserInfo(r *http.Request) *http.Request {
 	return r
 }
 
+// writeSubjectUserInfo TODO: Remove this method, no longer needed
 func writeSubjectUserInfo(r *http.Request) *http.Request {
 	ctx := r.Context()
 
@@ -130,6 +130,7 @@ func AuthUserFromContext(ctx context.Context) (Info, bool) {
 	return userInfo, ok
 }
 
+// SubjectUserFromContext TODO: Remove this method, no longer needed
 func SubjectUserFromContext(ctx context.Context) (Info, bool) {
 	userInfo, ok := ctx.Value(SubjectInfoKey).(Info)
 	return userInfo, ok
