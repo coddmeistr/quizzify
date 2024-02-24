@@ -16,7 +16,7 @@ type Storage interface {
 	CreateTest(ctx context.Context, test domain.Test) error
 	UpdateTest(ctx context.Context, testID string, test domain.Test) error
 	DeleteTest(ctx context.Context, testID string) error
-	GetTestByID(ctx context.Context, testID string) (*domain.Test, error)
+	GetTestByID(ctx context.Context, testID string, includeAnswers bool) (*domain.Test, error)
 	GetTests(ctx context.Context) ([]*domain.Test, error)
 }
 
@@ -58,12 +58,12 @@ func (s *Service) GetTests(ctx context.Context) ([]*domain.Test, error) {
 	return tests, nil
 }
 
-func (s *Service) GetTestByID(ctx context.Context, testID string) (*domain.Test, error) {
+func (s *Service) GetTestByID(ctx context.Context, testID string, provideAnswers bool) (*domain.Test, error) {
 	const op = "service.testsservice.GetTestByID"
 	log := s.log.With(zap.String("op", op))
 	log.Info("getting test")
 
-	test, err := s.storage.GetTestByID(ctx, testID)
+	test, err := s.storage.GetTestByID(ctx, testID, provideAnswers)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			log.Warn("test not found")
@@ -71,6 +71,14 @@ func (s *Service) GetTestByID(ctx context.Context, testID string) (*domain.Test,
 		}
 		log.Error("failed to get test", zap.Error(err))
 		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if provideAnswers {
+		authUser, ok := user.AuthUserFromContext(ctx)
+		if !ok || (authUser.ID != *test.UserID && slice.MaxInt(authUser.Permissions) < user.Admin) {
+			log.Error("forbidden action")
+			return nil, fmt.Errorf("%s: %w", op, ErrNoRights)
+		}
 	}
 
 	log.Info("test was gotten successfully")
@@ -82,7 +90,7 @@ func (s *Service) DeleteTest(ctx context.Context, testID string) error {
 	log := s.log.With(zap.String("op", op))
 	log.Info("starting test deletion")
 
-	test, err := s.storage.GetTestByID(ctx, testID)
+	test, err := s.storage.GetTestByID(ctx, testID, false)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			log.Warn("test not found")
@@ -160,7 +168,7 @@ func (s *Service) UpdateTest(ctx context.Context, testID string, update domain.T
 	log := s.log.With(zap.String("op", op))
 	log.Info("updating test")
 
-	test, err := s.storage.GetTestByID(ctx, testID)
+	test, err := s.storage.GetTestByID(ctx, testID, true)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			log.Warn("test not found")

@@ -62,7 +62,7 @@ type VariantMultipleChoice struct {
 }
 
 type SimpleAnswer struct {
-	IsCorrect *bool `json:"is_correct"`
+	IsCorrect bool `json:"is_correct"`
 }
 
 func (t *Test) ToDomain() *domain.Test {

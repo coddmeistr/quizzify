@@ -14,13 +14,14 @@ import (
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/slice"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 )
 
 type Service interface {
 	CreateTest(ctx context.Context, test domain.Test) error
 	UpdateTest(ctx context.Context, testID string, test domain.Test) error
 	DeleteTest(ctx context.Context, testID string) error
-	GetTestByID(ctx context.Context, testID string) (*domain.Test, error)
+	GetTestByID(ctx context.Context, testID string, provideAnswers bool) (*domain.Test, error)
 	GetTests(ctx context.Context) ([]*domain.Test, error)
 }
 
@@ -85,11 +86,22 @@ func (h *Handlers) GetTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	test, err := h.srv.GetTestByID(r.Context(), testID)
+	var withAnswers bool
+	withAnswers, err := strconv.ParseBool(r.URL.Query().Get("withAnswers"))
+	if err != nil {
+		withAnswers = false
+	}
+
+	test, err := h.srv.GetTestByID(r.Context(), testID, withAnswers)
 	if err != nil {
 		if errors.Is(err, testsservice.ErrNotFound) {
 			log.Error("test not found", zap.Error(err))
 			ahttp.WriteError(w, ahttp.ErrNotFound)
+			return
+		}
+		if errors.Is(err, testsservice.ErrNoRights) {
+			log.Error("forbidden action", zap.Error(err))
+			ahttp.WriteErrorMessage(w, ahttp.ErrForbidden, "no rights to get test with answers")
 			return
 		}
 		log.Error("failed to get test", zap.Error(err))

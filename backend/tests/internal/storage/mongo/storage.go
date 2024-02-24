@@ -8,6 +8,7 @@ import (
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/storage"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 )
 
@@ -28,22 +29,17 @@ func New(db *mongo.Database) *Storage {
 func (s *Storage) GetTests(ctx context.Context) ([]*domain.Test, error) {
 	const op = "mongo.storage.GetTests"
 
+	opt := options.Find().SetProjection(getProjectionForAnwers())
+
 	tests := make([]*domain.Test, 0)
-	cursor, err := s.db.Collection(testsCollection).Find(ctx, bson.D{})
+	cursor, err := s.db.Collection(testsCollection).Find(ctx, bson.D{}, opt)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	defer func() { _ = cursor.Close(ctx) }()
 
-	for cursor.Next(ctx) {
-		var test domain.Test
-		if err := cursor.Decode(&test); err != nil {
-			return nil, fmt.Errorf("%s: %w", op, err)
-		}
-		tests = append(tests, &test)
-	}
-	if cursor.Err() != nil {
-		return nil, fmt.Errorf("%s: %w", op, cursor.Err())
+	if err = cursor.All(ctx, &tests); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return tests, nil
@@ -77,11 +73,16 @@ func (s *Storage) DeleteTest(ctx context.Context, testID string) error {
 	return nil
 }
 
-func (s *Storage) GetTestByID(ctx context.Context, testID string) (*domain.Test, error) {
+func (s *Storage) GetTestByID(ctx context.Context, testID string, includeAnswers bool) (*domain.Test, error) {
 	const op = "mongo.storage.GetTestByID"
 
+	opt := options.FindOne()
+	if !includeAnswers {
+		opt.SetProjection(getProjectionForAnwers())
+	}
+
 	var test domain.Test
-	err := s.db.Collection(testsCollection).FindOne(ctx, bson.D{{"_id", testID}}).Decode(&test)
+	err := s.db.Collection(testsCollection).FindOne(ctx, bson.D{{"_id", testID}}, opt).Decode(&test)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, fmt.Errorf("%s: %w", op, storage.ErrNotFound)
