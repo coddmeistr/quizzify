@@ -34,6 +34,7 @@ type Question struct {
 	ShortText *string   `json:"short_text" validate:"required"`
 	Required  *bool     `json:"required"`
 	Variants  *Variants `json:"variants" validate:"required,dive"`
+	Answer    *Answer   `json:"answers,omitempty"`
 }
 
 type Image struct {
@@ -42,9 +43,9 @@ type Image struct {
 }
 
 type VariantField struct {
-	Text         *string       `json:"text" validate:"required"`
-	Image        *Image        `json:"image"`
-	SimpleAnswer *SimpleAnswer `json:"simple_answer"`
+	ID    int     `json:"id"`
+	Text  *string `json:"text" validate:"required"`
+	Image *Image  `json:"image"`
 }
 
 type Variants struct {
@@ -61,8 +62,10 @@ type VariantMultipleChoice struct {
 	MultipleChoiceFields *[]*VariantField `json:"fields" validate:"required,dive"`
 }
 
-type SimpleAnswer struct {
-	IsCorrect bool `json:"is_correct"`
+type Answer struct {
+	CorrectID   *int    `json:"correct_id"`
+	CorrectIDs  *[]int  `json:"correct_ids"`
+	CorrectText *string `json:"correct_text"`
 }
 
 func (t *Test) ToDomain() *domain.Test {
@@ -103,9 +106,14 @@ func (q *Question) ToDomain() *domain.Question {
 
 	id := uuid.New().String()
 
-	var domainVariants *domain.Variants
+	var domainVariants *domain.VariantsModel
 	if q.Variants != nil {
 		domainVariants = q.Variants.ToDomain()
+	}
+
+	var domainAnswer *domain.AnswerModel
+	if q.Answer != nil {
+		domainAnswer = q.Answer.ToDomain()
 	}
 
 	return &domain.Question{
@@ -115,12 +123,22 @@ func (q *Question) ToDomain() *domain.Question {
 		ShortText: q.ShortText,
 		Required:  q.Required,
 		Variants:  domainVariants,
+		Answers:   domainAnswer,
 	}
 }
 
-func (a *Variants) ToDomain() *domain.Variants {
-	var domainSingleChoice *domain.VariantSingleChoice
-	var domainMultipleChoice *domain.VariantMultipleChoice
+func (a *Answer) ToDomain() *domain.AnswerModel {
+
+	return &domain.AnswerModel{
+		CorrectID:   a.CorrectID,
+		CorrectIDs:  a.CorrectIDs,
+		CorrectText: a.CorrectText,
+	}
+}
+
+func (a *Variants) ToDomain() *domain.VariantsModel {
+	var domainSingleChoice *domain.SingleChoice
+	var domainMultipleChoice *domain.MultipleChoice
 
 	if a.VariantSingleChoice != nil {
 		domainSingleChoice = a.VariantSingleChoice.ToDomain()
@@ -129,52 +147,47 @@ func (a *Variants) ToDomain() *domain.Variants {
 		domainMultipleChoice = a.VariantMultipleChoice.ToDomain()
 	}
 
-	return &domain.Variants{
-		VariantSingleChoice:   domainSingleChoice,
-		VariantMultipleChoice: domainMultipleChoice,
+	return &domain.VariantsModel{
+		SingleChoice:   domainSingleChoice,
+		MultipleChoice: domainMultipleChoice,
 	}
 }
 
-func (a VariantMultipleChoice) ToDomain() *domain.VariantMultipleChoice {
-	domainFields := make([]*domain.VariantField, 0, len(*a.MultipleChoiceFields))
+func (a VariantMultipleChoice) ToDomain() *domain.MultipleChoice {
+	domainFields := make([]*domain.CommonField, 0, len(*a.MultipleChoiceFields))
 	for _, v := range *a.MultipleChoiceFields {
 		domainFields = append(domainFields, v.ToDomain())
 	}
 
-	return &domain.VariantMultipleChoice{
-		MaxChoices:           a.MaxChoices,
-		MultipleChoiceFields: &domainFields,
+	return &domain.MultipleChoice{
+		MaxChoices: a.MaxChoices,
+		Fields:     &domainFields,
 	}
 }
 
-func (a VariantSingleChoice) ToDomain() *domain.VariantSingleChoice {
+func (a VariantSingleChoice) ToDomain() *domain.SingleChoice {
 
-	domainFields := make([]*domain.VariantField, 0, len(*a.SingleChoiceFields))
+	domainFields := make([]*domain.CommonField, 0, len(*a.SingleChoiceFields))
 	for _, v := range *a.SingleChoiceFields {
 		domainFields = append(domainFields, v.ToDomain())
 	}
 
-	return &domain.VariantSingleChoice{
-		SingleChoiceFields: &domainFields,
+	return &domain.SingleChoice{
+		Fields: &domainFields,
 	}
 }
 
-func (a *VariantField) ToDomain() *domain.VariantField {
+func (a *VariantField) ToDomain() *domain.CommonField {
 
 	var domainImage *domain.Image
 	if a.Image != nil {
 		domainImage = a.Image.ToDomain()
 	}
 
-	var domainAnswer *domain.AnswerSimple
-	if a.SimpleAnswer != nil {
-		domainAnswer = &domain.AnswerSimple{IsCorrect: a.SimpleAnswer.IsCorrect}
-	}
-
-	return &domain.VariantField{
-		Text:         a.Text,
-		Image:        domainImage,
-		AnswerSimple: domainAnswer,
+	return &domain.CommonField{
+		FieldID: a.ID,
+		Text:    a.Text,
+		Image:   domainImage,
 	}
 }
 

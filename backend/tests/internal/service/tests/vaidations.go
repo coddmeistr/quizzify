@@ -3,6 +3,7 @@ package testsservice
 import (
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/slice"
 	"go.uber.org/zap"
 )
 
@@ -60,52 +61,59 @@ func (val *Validation) validateStrictTest(test domain.Test) bool {
 
 func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bool {
 	const op = "testsservice.validation.validateQuestion"
-	log := val.log.With(zap.String("op", op))
+	log := val.log.With(zap.String("op", op), zap.String("qtype", *q.Type))
 
 	switch *q.Type {
 	case QuestionTypeSingleChoice:
 		var (
-			v = q.Variants.VariantSingleChoice
+			v = q.Variants.SingleChoice
 		)
 		if v == nil {
 			log.Error("no single choice structure")
 			return false
 		}
-		if v.SingleChoiceFields == nil {
-			log.Error("no single choice variants")
+		if v.Fields == nil {
+			log.Error("no single choice variants slice")
 			return false
 		}
-
-		if len(*v.SingleChoiceFields) <= 0 {
-			log.Error("no variants")
+		if len(*v.Fields) <= 0 {
+			log.Error("zero variants")
+			return false
+		}
+		if !val.validateFields(*v.Fields) {
+			log.Error("failed to validate fields")
 			return false
 		}
 
 		if checkAnswers {
-			count := 0
-			for _, field := range *v.SingleChoiceFields {
-				if field.AnswerSimple == nil {
-					log.Error("answer is nil")
-					return false
-				}
-				if field.AnswerSimple.IsCorrect {
-					count++
-				}
-			}
-			if count != 1 {
-				log.Error("single choice variants has more than 1 correct answer or 0 correct answers")
+			var a = q.Answers
+			if !val.validateAnswers(a) {
+				log.Error("coulnd't validate answers")
 				return false
 			}
+			if a.CorrectID == nil {
+				log.Error("no required CorrectID value for single choice model")
+				return false
+			}
+
+			for _, v := range *v.Fields {
+				if v.FieldID == *a.CorrectID {
+					return true
+				}
+			}
+
+			log.Error("CorrectID doesn't pointing to some of the FieldID in fields slice")
+			return false
 		}
 	case QuestionTypeMultipleChoice:
 		var (
-			v = q.Variants.VariantMultipleChoice
+			v = q.Variants.MultipleChoice
 		)
 		if v == nil {
 			log.Error("no multiple choice structure")
 			return false
 		}
-		if v.MultipleChoiceFields == nil {
+		if v.Fields == nil {
 			log.Error("no multiple choice variants")
 			return false
 		}
@@ -113,28 +121,49 @@ func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bo
 			log.Error("no max choices")
 			return false
 		}
-
-		if !(len(*v.MultipleChoiceFields) > 0 &&
+		if !(len(*v.Fields) > 0 &&
 			*v.MaxChoices > 0) {
-			log.Error("no fields or zero max choices", zap.Any("struct", q.Variants.VariantMultipleChoice))
+			log.Error("no fields or zero max choices", zap.Any("struct", v))
+			return false
+		}
+		if !val.validateFields(*v.Fields) {
+			log.Error("failed to validate fields")
 			return false
 		}
 
 		if checkAnswers {
+			var a = q.Answers
+			if !val.validateAnswers(a) {
+				log.Error("coulnd't validate answers")
+				return false
+			}
+			if a.CorrectIDs == nil {
+				log.Error("no required CorrectIDs slice for multiple choice model")
+				return false
+			}
+
 			count := 0
-			for _, field := range *v.MultipleChoiceFields {
-				if field.AnswerSimple == nil {
-					log.Error("answer is nil")
-					return false
-				}
-				if field.AnswerSimple.IsCorrect {
+			for _, v := range *v.Fields {
+				if slice.Contains(*a.CorrectIDs, v.FieldID) {
 					count++
 				}
 			}
-			if count > *v.MaxChoices || count <= 0 {
-				log.Error("multiple choice variants has more than max choices or less than 1 correct answer")
+			if count != len(*a.CorrectIDs) {
+				log.Error("CorrectIDs contains id that is not in fields slice")
 				return false
 			}
+
+			if count > *v.MaxChoices {
+				log.Error("Correct answers more than max choices")
+				return false
+			}
+
+			if count == 0 {
+				log.Error("no correct answers")
+				return false
+			}
+
+			return true
 		}
 	default:
 		log.Error("unknown question type")
@@ -142,5 +171,66 @@ func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bo
 	}
 
 	log.Info("question was validated successfully")
+	return true
+}
+
+func (val *Validation) validateFields(fs []*domain.CommonField) bool {
+	const op = "testsservice.validation.validateFields"
+	log := val.log.With(zap.String("op", op))
+
+	met := make(map[int]struct{})
+	for _, v := range fs {
+		if v == nil {
+			log.Error("field is null")
+			return false
+		}
+		if v.FieldID <= 0 {
+			log.Error("FieldID is 0 or less")
+			return false
+		}
+		if _, ok := met[v.FieldID]; ok {
+			log.Error("repeated FieldID in fields array")
+			return false
+		}
+		met[v.FieldID] = struct{}{}
+	}
+
+	return true
+}
+
+func (val *Validation) validateAnswers(a *domain.AnswerModel) bool {
+	const op = "testsservice.validation.validateAnswers"
+	log := val.log.With(zap.String("op", op))
+	if a == nil {
+		log.Error("answers struct is nil")
+		return false
+	}
+
+	if a.CorrectID != nil && *a.CorrectID <= 0 {
+		log.Error("CorrectID 0 or less")
+		return false
+	}
+
+	if a.CorrectIDs != nil && len(*a.CorrectIDs) == 0 {
+		log.Error("no correct answers in ids slice, len is zero")
+		return false
+	}
+
+	if a.CorrectIDs != nil {
+		met := make(map[int]struct{})
+		for _, v := range *a.CorrectIDs {
+			if _, ok := met[v]; ok {
+				log.Error("repeated ids in CorrectIDs slice")
+				return false
+			}
+			met[v] = struct{}{}
+		}
+	}
+
+	if a.CorrectText != nil && *a.CorrectText == "" {
+		log.Error("CorrectText presented but empty string")
+		return false
+	}
+
 	return true
 }
