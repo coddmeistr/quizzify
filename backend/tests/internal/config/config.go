@@ -55,6 +55,15 @@ func MustLoad() *Config {
 	return cfg
 }
 
+func MustLoadByPath(path string) *Config {
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return cfg
+}
+
 func loadFromPath(path string) (*Config, error) {
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		return nil, errors.New("config file not found in " + path)
