@@ -63,9 +63,21 @@ type VariantMultipleChoice struct {
 }
 
 type Answer struct {
-	CorrectID   *int    `json:"correct_id"`
-	CorrectIDs  *[]int  `json:"correct_ids"`
-	CorrectText *string `json:"correct_text"`
+	CorrectID   *int       `json:"correct_id"`
+	CorrectIDs  *[]int     `json:"correct_ids"`
+	CorrectText *string    `json:"correct_text"`
+	Params      *[]*Params `json:"params"`
+}
+
+type Params struct {
+	FieldID int            `json:"id"`
+	Params  *[]*FlexParams `json:"params"`
+}
+
+type FlexParams struct {
+	Name       *string `json:"name"`
+	Effect     *int    `json:"effect"`
+	IsNegative *bool   `json:"is_negative"`
 }
 
 func (t *Test) ToDomain() *domain.Test {
