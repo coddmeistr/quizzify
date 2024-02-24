@@ -18,9 +18,9 @@ func NewValidation(cfg *config.Config, log *zap.Logger) *Validation {
 	}
 }
 
-func (v *Validation) validateForm(test domain.Test) bool {
+func (val *Validation) validateForm(test domain.Test) bool {
 	for _, q := range *test.Questions {
-		if !v.validateQuestion(*q, false) {
+		if !val.validateQuestion(*q, false) {
 			return false
 		}
 	}
@@ -28,9 +28,9 @@ func (v *Validation) validateForm(test domain.Test) bool {
 	return true
 }
 
-func (v *Validation) validateQuiz(test domain.Test) bool {
+func (val *Validation) validateQuiz(test domain.Test) bool {
 	for _, q := range *test.Questions {
-		if !v.validateQuestion(*q, false) {
+		if !val.validateQuestion(*q, false) {
 			return false
 		}
 	}
@@ -38,9 +38,9 @@ func (v *Validation) validateQuiz(test domain.Test) bool {
 	return true
 }
 
-func (v *Validation) validateTest(test domain.Test) bool {
+func (val *Validation) validateTest(test domain.Test) bool {
 	for _, q := range *test.Questions {
-		if !v.validateQuestion(*q, true) {
+		if !val.validateQuestion(*q, true) {
 			return false
 		}
 	}
@@ -48,9 +48,9 @@ func (v *Validation) validateTest(test domain.Test) bool {
 	return true
 }
 
-func (v *Validation) validateStrictTest(test domain.Test) bool {
+func (val *Validation) validateStrictTest(test domain.Test) bool {
 	for _, q := range *test.Questions {
-		if !v.validateQuestion(*q, true) {
+		if !val.validateQuestion(*q, true) {
 			return false
 		}
 	}
@@ -58,53 +58,89 @@ func (v *Validation) validateStrictTest(test domain.Test) bool {
 	return true
 }
 
-func (v *Validation) validateQuestion(q domain.Question, checkAnswers bool) bool {
+func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bool {
+	const op = "testsservice.validation.validateQuestion"
+	log := val.log.With(zap.String("op", op))
 
 	switch *q.Type {
 	case QuestionTypeSingleChoice:
-		if !(q.Variants.VariantSingleChoice != nil &&
-			len(*q.Variants.VariantSingleChoice.SingleChoiceFields) > 0) {
-			v.log.Error("no single choice structure or no variants")
+		var (
+			v = q.Variants.VariantSingleChoice
+		)
+		if v == nil {
+			log.Error("no single choice structure")
+			return false
+		}
+		if v.SingleChoiceFields == nil {
+			log.Error("no single choice variants")
+			return false
+		}
+
+		if len(*v.SingleChoiceFields) <= 0 {
+			log.Error("no variants")
 			return false
 		}
 
 		if checkAnswers {
 			count := 0
-			for _, field := range *q.Variants.VariantSingleChoice.SingleChoiceFields {
-				if *field.AnswerSimple.IsCorrect {
+			for _, field := range *v.SingleChoiceFields {
+				if field.AnswerSimple == nil {
+					log.Error("answer is nil")
+					return false
+				}
+				if field.AnswerSimple.IsCorrect {
 					count++
 				}
 			}
 			if count != 1 {
-				v.log.Error("single choice variants has more than 1 correct answer")
+				log.Error("single choice variants has more than 1 correct answer or 0 correct answers")
 				return false
 			}
 		}
 	case QuestionTypeMultipleChoice:
-		if !(q.Variants.VariantMultipleChoice != nil &&
-			len(*q.Variants.VariantMultipleChoice.MultipleChoiceFields) > 0 &&
-			*q.Variants.VariantMultipleChoice.MaxChoices > 0) {
-			v.log.Error("no multiple choice structure or no variants", zap.Any("struct", q.Variants.VariantMultipleChoice))
+		var (
+			v = q.Variants.VariantMultipleChoice
+		)
+		if v == nil {
+			log.Error("no multiple choice structure")
+			return false
+		}
+		if v.MultipleChoiceFields == nil {
+			log.Error("no multiple choice variants")
+			return false
+		}
+		if v.MaxChoices == nil {
+			log.Error("no max choices")
+			return false
+		}
+
+		if !(len(*v.MultipleChoiceFields) > 0 &&
+			*v.MaxChoices > 0) {
+			log.Error("no fields or zero max choices", zap.Any("struct", q.Variants.VariantMultipleChoice))
 			return false
 		}
 
 		if checkAnswers {
 			count := 0
-			for _, field := range *q.Variants.VariantMultipleChoice.MultipleChoiceFields {
-				if *field.AnswerSimple.IsCorrect {
+			for _, field := range *v.MultipleChoiceFields {
+				if field.AnswerSimple == nil {
+					log.Error("answer is nil")
+					return false
+				}
+				if field.AnswerSimple.IsCorrect {
 					count++
 				}
 			}
-			if count > *q.Variants.VariantMultipleChoice.MaxChoices || count <= 0 {
-				v.log.Error("multiple choice variants has more than max choices or less than 1 correct answer")
+			if count > *v.MaxChoices || count <= 0 {
+				log.Error("multiple choice variants has more than max choices or less than 1 correct answer")
 				return false
 			}
 		}
 	default:
-		v.log.Error("unknown question type")
+		log.Error("unknown question type")
 		return false
 	}
 
-	v.log.Info("question was validated successfully")
+	log.Info("question was validated successfully")
 	return true
 }

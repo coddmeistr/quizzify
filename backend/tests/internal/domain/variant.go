@@ -12,7 +12,7 @@ type VariantMultipleChoice struct {
 type VariantField struct {
 	Text         *string       `json:"text" bson:"text"`
 	Image        *Image        `json:"image,omitempty" bson:"image"`
-	AnswerSimple *AnswerSimple `json:"answer_simple,omitempty" bson:"answer_simple"`
+	AnswerSimple *AnswerSimple `json:"answer_simple,omitempty" bson:"answer_simple,omitempty"`
 }
 
 type Variants struct {
