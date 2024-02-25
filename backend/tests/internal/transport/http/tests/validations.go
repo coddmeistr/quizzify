@@ -97,6 +97,14 @@ func (v *TestValidator) TestStructLevelValidation(sl validator.StructLevel) {
 		sl.ReportError(test.Questions, "Questions", "Questions", http.ErrTagHigherThanMaxLimit, "")
 	}
 
+	met := make(map[int]struct{})
+	for _, v := range *test.Questions {
+		if _, ok := met[v.ID]; ok {
+			sl.ReportError(test.Questions, "Questions.ID", "Questions.ID", http.ErrTagNotUnique, "")
+		}
+		met[v.ID] = struct{}{}
+	}
+
 }
 
 func (v *TestValidator) QuestionStructLevelValidation(sl validator.StructLevel) {

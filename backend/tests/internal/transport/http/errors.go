@@ -19,6 +19,7 @@ var (
 	ErrInvalidTestType      = errors.New("invalid test type")
 	ErrInvalidTestStructure = errors.New("invalid test structure")
 	ErrNotFound             = errors.New("not found")
+	ErrUniqueConstraint     = errors.New("got repeated value that must be unique")
 )
 
 var codes = map[error]string{
@@ -32,6 +33,7 @@ var codes = map[error]string{
 	ErrInvalidTestType:      "INVALID_TEST_TYPE",
 	ErrInvalidTestStructure: "INVALID_TEST_STRUCTURE",
 	ErrNotFound:             "NOT_FOUND",
+	ErrUniqueConstraint:     "UNIQUE_CONSTRAINT",
 	ErrUnknown:              unknown,
 }
 
@@ -47,7 +49,7 @@ func CodeFromError(err error) int {
 	case errors.Is(err, ErrInvalidJSONBody), errors.Is(err, ErrFailedValidation),
 		errors.Is(err, ErrMaxLimit), errors.Is(err, ErrMinLimit),
 		errors.Is(err, ErrNoRequiredValue), errors.Is(err, ErrInvalidTestType),
-		errors.Is(err, ErrInvalidTestStructure):
+		errors.Is(err, ErrInvalidTestStructure), errors.Is(err, ErrUniqueConstraint):
 		return http.StatusBadRequest
 	case errors.Is(err, ErrInternal):
 		return http.StatusInternalServerError

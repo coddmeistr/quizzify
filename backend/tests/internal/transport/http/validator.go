@@ -14,6 +14,7 @@ import (
 const (
 	ErrTagHigherThanMaxLimit = "higher_than_max_limit"
 	ErrTagLowerThanMinLimit  = "lower_than_min_limit"
+	ErrTagNotUnique          = "not_unique"
 )
 
 type ValidatorProvider interface {
@@ -57,6 +58,8 @@ func (v *Validator) Validate(w http.ResponseWriter, s interface{}) bool {
 				errCode = ErrorCode(ErrMaxLimit)
 			case ErrTagLowerThanMinLimit:
 				errCode = ErrorCode(ErrMinLimit)
+			case ErrTagNotUnique:
+				errCode = ErrorCode(ErrUniqueConstraint)
 			case "required":
 				errCode = ErrorCode(ErrNoRequiredValue)
 			default:
