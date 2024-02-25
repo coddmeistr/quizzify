@@ -31,32 +31,19 @@ const (
 	Admin     = 3
 )
 
-// AuthMiddleware TODO: Remove this method, no longer needed
 func AuthMiddleware(lowestRoleForIndependentAccess int) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			var (
 				authUserInfo = Info{}
-				subjUserInfo = Info{}
 			)
 			authUserJson := r.Header.Get(authUserInfoHeader)
 			if err := json.Unmarshal([]byte(authUserJson), &authUserInfo); err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			if authUserInfo.ID == 0 {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			subjUserJson := r.Header.Get(subjectUserInfoHeader)
-			if err := json.Unmarshal([]byte(subjUserJson), &subjUserInfo); err != nil {
-				w.WriteHeader(http.StatusForbidden)
-				return
-			}
-
-			if authUserInfo.ID != subjUserInfo.ID && slice.MaxInt(authUserInfo.Permissions) < lowestRoleForIndependentAccess {
+			if authUserInfo.ID == 0 || slice.MaxInt(authUserInfo.Permissions) < lowestRoleForIndependentAccess {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
