@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	testsCollection = "tests"
+	testsCollection   = "tests"
+	resultsCollection = "results"
 )
 
 type Storage struct {
@@ -24,6 +25,17 @@ func New(db *mongo.Database) *Storage {
 	return &Storage{
 		db: db,
 	}
+}
+
+func (s *Storage) SaveUserResult(ctx context.Context, result domain.Result) error {
+	const op = "mongo.storage.SaveUserResult"
+
+	_, err := s.db.Collection(resultsCollection).InsertOne(ctx, result)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
 
 func (s *Storage) GetTests(ctx context.Context) ([]*domain.Test, error) {

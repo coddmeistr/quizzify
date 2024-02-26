@@ -5,6 +5,17 @@ import (
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
 )
 
+type ApplyTestRequest struct {
+	UserAnswers []*UserAnswer `json:"user_answers" validate:"required,dive"`
+}
+
+type UserAnswer struct {
+	QuestionID int     `json:"question_id" validate:"required,gte=1"`
+	ChosenID   *int    `json:"chosen_id"`
+	ChosenIDs  *[]int  `json:"chosen_ids"`
+	WritedText *string `json:"writed_text"`
+}
+
 type UpdateTestPreviewRequest struct {
 	Title     *string   `json:"title"`
 	ShortText *string   `json:"short_text"`
@@ -23,16 +34,18 @@ type Test struct {
 	Type      *string      `json:"type" validate:"required"`
 	ShortText *string      `json:"short_text" validate:"required"`
 	LongText  *string      `json:"long_text" validate:"required"`
-	MainImage *Image       `json:"main_image" validate:"required"`
+	MainImage *Image       `json:"main_image"`
 	Questions *[]*Question `json:"questions" validate:"required,gte=1,dive"`
 	Tags      *[]string    `json:"tags"`
 }
 
 type Question struct {
+	ID        int       `json:"id"  validate:"required,gte=1"`
 	Type      *string   `json:"type" validate:"required"`
 	LongText  *string   `json:"long_text"`
 	ShortText *string   `json:"short_text" validate:"required"`
-	Required  *bool     `json:"required"`
+	Required  bool      `json:"required"`
+	Points    *int      `json:"points"`
 	Variants  *Variants `json:"variants" validate:"required,dive"`
 	Answer    *Answer   `json:"answers,omitempty"`
 }
@@ -80,6 +93,16 @@ type FlexParams struct {
 	IsNegative *bool   `json:"is_negative"`
 }
 
+func (a *UserAnswer) ToDomain() *domain.UserAnswerModel {
+	return &domain.UserAnswerModel{
+		QuestionID: a.QuestionID,
+		ChosenID:   a.ChosenID,
+		ChosenIDs:  a.ChosenIDs,
+		WritedText: a.WritedText,
+	}
+
+}
+
 func (t *Test) ToDomain() *domain.Test {
 
 	id := uuid.New().String()
@@ -116,8 +139,6 @@ func (i *Image) ToDomain() *domain.Image {
 
 func (q *Question) ToDomain() *domain.Question {
 
-	id := uuid.New().String()
-
 	var domainVariants *domain.VariantsModel
 	if q.Variants != nil {
 		domainVariants = q.Variants.ToDomain()
@@ -129,11 +150,12 @@ func (q *Question) ToDomain() *domain.Question {
 	}
 
 	return &domain.Question{
-		ID:        &id,
+		ID:        q.ID,
 		Type:      q.Type,
 		LongText:  q.LongText,
 		ShortText: q.ShortText,
 		Required:  q.Required,
+		Points:    q.Points,
 		Variants:  domainVariants,
 		Answers:   domainAnswer,
 	}

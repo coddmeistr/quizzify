@@ -8,6 +8,7 @@ import (
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/helpers/user"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/storage"
+	p "github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/pointer"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/slice"
 	"go.uber.org/zap"
 )
@@ -18,6 +19,7 @@ type Storage interface {
 	DeleteTest(ctx context.Context, testID string) error
 	GetTestByID(ctx context.Context, testID string, includeAnswers bool) (*domain.Test, error)
 	GetTests(ctx context.Context) ([]*domain.Test, error)
+	SaveUserResult(ctx context.Context, result domain.Result) error
 }
 
 var (
@@ -41,6 +43,79 @@ func New(log *zap.Logger, cfg *config.Config, storage Storage) *Service {
 		storage:    storage,
 		validation: NewValidation(cfg, log),
 	}
+}
+
+func (s *Service) ApplyTest(ctx context.Context, testID string, UserID int, answers map[int]domain.UserAnswerModel) error {
+	const op = "service.testsservice.ApplyTest"
+	log := s.log.With(zap.String("op", op))
+	log.Info("applying test")
+
+	test, err := s.storage.GetTestByID(ctx, testID, true)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			log.Warn("test not found")
+			return fmt.Errorf("%s: %w", op, ErrNotFound)
+		}
+		log.Error("failed to get test", zap.Error(err))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	switch *test.Type {
+	case domain.TestTypeForm:
+		ua := make([]domain.UserAnswerModel, 0, len(answers))
+		for _, q := range *test.Questions {
+			if !s.validation.validateUserAnswers(*q, answers[q.ID]) {
+				log.Error("failed to validate user answers")
+				return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
+			}
+			ua = append(ua, answers[q.ID])
+		}
+
+		err := s.storage.SaveUserResult(ctx, domain.Result{
+			TestID:      testID,
+			UserID:      UserID,
+			UserAnswers: ua,
+		})
+		if err != nil {
+			log.Error("failed to save user result", zap.Error(err))
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	case domain.TestTypeQuiz:
+		log.Error("NOT IMPLEMENTED")
+	case domain.TestTypeStrictTest:
+		maxPoints := 0
+		points := 0
+		ua := make([]domain.UserAnswerModel, 0, len(answers))
+		for _, q := range *test.Questions {
+			if !s.validation.validateUserAnswers(*q, answers[q.ID]) {
+				log.Error("failed to validate user answers")
+				return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
+			}
+			maxPoints += *q.Points
+			got := q.ComparePreciseResults(answers[q.ID])
+			points += int((float64(got) / 100.0) * float64(*q.Points))
+			ua = append(ua, answers[q.ID])
+		}
+
+		err := s.storage.SaveUserResult(ctx, domain.Result{
+			TestID:      testID,
+			UserID:      UserID,
+			UserAnswers: ua,
+			Percentage:  p.Int(int(float64(points) / float64(maxPoints) * 100)),
+		})
+		if err != nil {
+			log.Error("failed to save user test result", zap.Error(err))
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	case domain.TestTypeTest:
+		log.Error("NOT IMPLEMENTED")
+	default:
+		log.Error("invalid test type", zap.String("type", *test.Type))
+		return fmt.Errorf("%s: %w", op, ErrInvalidTestType)
+	}
+
+	log.Info("test was applied successfully")
+	return nil
 }
 
 func (s *Service) GetTests(ctx context.Context) ([]*domain.Test, error) {
@@ -128,22 +203,22 @@ func (s *Service) CreateTest(ctx context.Context, test domain.Test) error {
 	switch *test.Type {
 	// Form that is to gather information from one person (or group of people)
 	// Should NOT contain correct answers in each question
-	case TestTypeForm:
+	case domain.TestTypeForm:
 		validated = s.validation.validateForm(test)
 	// Quiz that is to gather information from one person or group of people
 	// Used to collect a lot of respondents and combine and analyze final result (social quiz's)
 	// Should NOT contain correct answers in each question
-	case TestTypeQuiz:
+	case domain.TestTypeQuiz:
 		validated = s.validation.validateQuiz(test)
 	// Test used to collect some not strict answers and produce some final result
 	// This result is not strict and based on the answers provided
 	// This test MUST contain correct answers in each question in correct syntax
-	case TestTypeTest:
+	case domain.TestTypeTest:
 		validated = s.validation.validateTest(test)
 	// Strict test used to collect some strict answers and produce some final result
 	// This result contains percentage of right answers in all test
 	// This test MUST contain correct answers in each question in correct syntax
-	case TestTypeStrictTest:
+	case domain.TestTypeStrictTest:
 		validated = s.validation.validateStrictTest(test)
 	default:
 		s.log.Error("invalid test type", zap.String("type", *test.Type))

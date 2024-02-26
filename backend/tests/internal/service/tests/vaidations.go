@@ -19,6 +19,55 @@ func NewValidation(cfg *config.Config, log *zap.Logger) *Validation {
 	}
 }
 
+func (val *Validation) validateUserAnswers(q domain.Question, a domain.UserAnswerModel) bool {
+	const op = "testsservice.validation.validateUserAnswers"
+	log := val.log.With(zap.String("op", op), zap.String("qtype", *q.Type))
+
+	switch *q.Type {
+	case domain.QuestionTypeSingleChoice:
+		if a.ChosenID == nil {
+			log.Error("no chosen id")
+			return false
+		}
+		for _, v := range *q.Variants.SingleChoice.Fields {
+			if v.FieldID == *a.ChosenID {
+				return true
+			}
+		}
+		log.Error("chosen id is not in variants")
+		return false
+	case domain.QuestionTypeMultipleChoice:
+		if a.ChosenIDs == nil {
+			log.Error("no chosen ids")
+			return false
+		}
+		if slice.ContainsRepeated(*a.ChosenIDs) {
+			log.Error("repeated chosen ids")
+			return false
+		}
+		met := make(map[int]struct{})
+		for _, v := range *q.Variants.MultipleChoice.Fields {
+			met[v.FieldID] = struct{}{}
+		}
+		for _, v := range *a.ChosenIDs {
+			if _, ok := met[v]; !ok {
+				log.Error("chosen id is not in variants")
+				return false
+			}
+		}
+		return true
+	case domain.QuestionTypeManualInput:
+		if a.WritedText == nil {
+			log.Error("no writed text")
+			return false
+		}
+		return true
+	default:
+		log.Error("invalid question type")
+		return false
+	}
+}
+
 func (val *Validation) validateForm(test domain.Test) bool {
 	for _, q := range *test.Questions {
 		if !val.validateQuestion(*q, false) {
@@ -50,7 +99,14 @@ func (val *Validation) validateTest(test domain.Test) bool {
 }
 
 func (val *Validation) validateStrictTest(test domain.Test) bool {
+	const op = "testsservice.validation.validateStrictTest"
+	log := val.log.With(zap.String("op", op))
+
 	for _, q := range *test.Questions {
+		if q.Points == nil || *q.Points <= 0 {
+			log.Error("no points")
+			return false
+		}
 		if !val.validateQuestion(*q, true) {
 			return false
 		}
@@ -64,7 +120,7 @@ func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bo
 	log := val.log.With(zap.String("op", op), zap.String("qtype", *q.Type))
 
 	switch *q.Type {
-	case QuestionTypeSingleChoice:
+	case domain.QuestionTypeSingleChoice:
 		var (
 			v = q.Variants.SingleChoice
 		)
@@ -105,7 +161,7 @@ func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bo
 			log.Error("CorrectID doesn't pointing to some of the FieldID in fields slice")
 			return false
 		}
-	case QuestionTypeMultipleChoice:
+	case domain.QuestionTypeMultipleChoice:
 		var (
 			v = q.Variants.MultipleChoice
 		)
@@ -163,6 +219,19 @@ func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bo
 				return false
 			}
 
+			return true
+		}
+	case domain.QuestionTypeManualInput:
+		if checkAnswers {
+			var a = q.Answers
+			if !val.validateAnswers(a) {
+				log.Error("coulnd't validate answers")
+				return false
+			}
+			if a.CorrectText == nil {
+				log.Error("no required CorrectText for manualInput model")
+				return false
+			}
 			return true
 		}
 	default:
