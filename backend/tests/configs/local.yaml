@@ -14,5 +14,5 @@ service:
     max_for_common_user: 10
     main_image_byte_size: 4194304
   questions:
-    max_for_common_user: 10
+    max_for_common_user: 30
 other:

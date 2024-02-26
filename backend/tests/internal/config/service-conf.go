@@ -6,8 +6,8 @@ type Service struct {
 }
 
 type Tests struct {
-	ShortTextMaxLength int64 `yaml:"short_text_max_length" env-default:"60"`
-	LongTextMaxLength  int64 `yaml:"long_text_max_length" env-default:"200"`
+	ShortTextMaxLength int64 `yaml:"short_text_max_length" env-default:"300"`
+	LongTextMaxLength  int64 `yaml:"long_text_max_length" env-default:"300"`
 	ShortTextMinLength int64 `yaml:"short_text_min_length" env-default:"3"`
 	LongTextMinLength  int64 `yaml:"long_text_min_length" env-default:"0"`
 	MaxForCommonUser   int64 `yaml:"max_for_common_user" env-default:"10"`
@@ -16,10 +16,10 @@ type Tests struct {
 }
 
 type Questions struct {
-	ShortTextMaxLength int64 `yaml:"short_text_max_length" env-default:"60"`
+	ShortTextMaxLength int64 `yaml:"short_text_max_length" env-default:"200"`
 	LongTextMaxLength  int64 `yaml:"long_text_max_length" env-default:"200"`
 	ShortTextMinLength int64 `yaml:"short_text_min_length" env-default:"3"`
 	LongTextMinLength  int64 `yaml:"long_text_min_length" env-default:"0"`
-	MaxForCommonUser   int64 `yaml:"max_for_common_user" env-default:"10"`
+	MaxForCommonUser   int64 `yaml:"max_for_common_user" env-default:"30"`
 	MaxForPremiumUser  int64 `yaml:"max_for_premium_user" env-default:"500"`
 }

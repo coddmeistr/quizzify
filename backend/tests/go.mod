@@ -1,6 +1,8 @@
 module github.com/maxik12233/quizzify-online-tests/backend/tests
 
-go 1.21.1
+go 1.22
+
+toolchain go1.22.0
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
@@ -14,6 +16,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
+	github.com/brianvoe/gofakeit/v7 v7.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
