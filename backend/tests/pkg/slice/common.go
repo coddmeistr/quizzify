@@ -23,3 +23,14 @@ func MaxInt[T constraints.Integer](arr []T) T {
 	}
 	return m
 }
+
+func ContainsRepeated[T comparable](arr []T) bool {
+	met := make(map[T]struct{})
+	for _, v := range arr {
+		if _, ok := met[v]; ok {
+			return true
+		}
+		met[v] = struct{}{}
+	}
+	return false
+}
