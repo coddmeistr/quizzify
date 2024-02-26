@@ -1,4 +1,4 @@
-package testsservice
+package domain
 
 const (
 	TestTypeForm       = "form"
@@ -8,4 +8,5 @@ const (
 
 	QuestionTypeSingleChoice   = "single_choice"
 	QuestionTypeMultipleChoice = "multiple_choice"
+	QuestionTypeManualInput    = "manual_input"
 )
