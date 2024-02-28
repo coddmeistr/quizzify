@@ -22,6 +22,11 @@ type Storage interface {
 	SaveUserResult(ctx context.Context, result domain.Result) error
 }
 
+type Validator interface {
+	ValidateTest(test domain.Test) error
+	ValidateUserAnswers(q domain.Question, a domain.UserAnswerModel) error
+}
+
 var (
 	ErrNoRights             = errors.New("forbidden action")
 	ErrInvalidTestType      = errors.New("invalid test type")
@@ -33,15 +38,15 @@ type Service struct {
 	cfg        *config.Config
 	log        *zap.Logger
 	storage    Storage
-	validation *Validation
+	validation Validator
 }
 
-func New(log *zap.Logger, cfg *config.Config, storage Storage) *Service {
+func New(log *zap.Logger, cfg *config.Config, storage Storage, validator Validator) *Service {
 	return &Service{
 		cfg:        cfg,
 		log:        log,
 		storage:    storage,
-		validation: NewValidation(cfg, log),
+		validation: validator,
 	}
 }
 
@@ -64,8 +69,8 @@ func (s *Service) ApplyTest(ctx context.Context, testID string, UserID int, answ
 	case domain.TestTypeForm:
 		ua := make([]domain.UserAnswerModel, 0, len(answers))
 		for _, q := range *test.Questions {
-			if !s.validation.validateUserAnswers(*q, answers[q.ID]) {
-				log.Error("failed to validate user answers")
+			if err := s.validation.ValidateUserAnswers(*q, answers[q.ID]); err != nil {
+				log.Error("failed to validate user answers", zap.Error(err))
 				return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
 			}
 			ua = append(ua, answers[q.ID])
@@ -87,8 +92,8 @@ func (s *Service) ApplyTest(ctx context.Context, testID string, UserID int, answ
 		points := 0
 		ua := make([]domain.UserAnswerModel, 0, len(answers))
 		for _, q := range *test.Questions {
-			if !s.validation.validateUserAnswers(*q, answers[q.ID]) {
-				log.Error("failed to validate user answers")
+			if err := s.validation.ValidateUserAnswers(*q, answers[q.ID]); err != nil {
+				log.Error("failed to validate user answers", zap.Error(err))
 				return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
 			}
 			maxPoints += *q.Points
@@ -199,33 +204,8 @@ func (s *Service) CreateTest(ctx context.Context, test domain.Test) error {
 	log := s.log.With(zap.String("op", op))
 	log.Info("creating new test")
 
-	var validated bool
-	switch *test.Type {
-	// Form that is to gather information from one person (or group of people)
-	// Should NOT contain correct answers in each question
-	case domain.TestTypeForm:
-		validated = s.validation.validateForm(test)
-	// Quiz that is to gather information from one person or group of people
-	// Used to collect a lot of respondents and combine and analyze final result (social quiz's)
-	// Should NOT contain correct answers in each question
-	case domain.TestTypeQuiz:
-		validated = s.validation.validateQuiz(test)
-	// Test used to collect some not strict answers and produce some final result
-	// This result is not strict and based on the answers provided
-	// This test MUST contain correct answers in each question in correct syntax
-	case domain.TestTypeTest:
-		validated = s.validation.validateTest(test)
-	// Strict test used to collect some strict answers and produce some final result
-	// This result contains percentage of right answers in all test
-	// This test MUST contain correct answers in each question in correct syntax
-	case domain.TestTypeStrictTest:
-		validated = s.validation.validateStrictTest(test)
-	default:
-		s.log.Error("invalid test type", zap.String("type", *test.Type))
-		return fmt.Errorf("%s: %w", op, ErrInvalidTestType)
-	}
-	if !validated {
-		s.log.Error("failed test validation", zap.String("type", *test.Type))
+	if err := s.validation.ValidateTest(test); err != nil {
+		log.Error("failed to validate test", zap.Error(err))
 		return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
 	}
 

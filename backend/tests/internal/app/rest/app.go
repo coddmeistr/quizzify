@@ -8,6 +8,7 @@ import (
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/helpers/user"
 	testsservice "github.com/maxik12233/quizzify-online-tests/backend/tests/internal/service/tests"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/service/tests/validation"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/storage/mongo"
 	testshandlers "github.com/maxik12233/quizzify-online-tests/backend/tests/internal/transport/http/tests"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/api/logging"
@@ -29,7 +30,8 @@ type App struct {
 }
 
 func New(log *zap.Logger, storage *mongo.Storage, cfg *config.Config) *App {
-	testServ := testsservice.New(log, cfg, storage)
+	testValidator := validation.NewValidation(cfg, log)
+	testServ := testsservice.New(log, cfg, storage, testValidator)
 	testHandlers := testshandlers.New(log, cfg, testServ)
 
 	return &App{

@@ -1,6 +1,8 @@
-package testsservice
+package validation
 
 import (
+	"errors"
+	"fmt"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/slice"
@@ -12,6 +14,11 @@ type Validation struct {
 	log *zap.Logger
 }
 
+var (
+	ErrFailedTestValidation        = errors.New("failed test validation")
+	ErrFailedUserAnswersValidation = errors.New("failed user answers validation")
+)
+
 func NewValidation(cfg *config.Config, log *zap.Logger) *Validation {
 	return &Validation{
 		cfg: cfg,
@@ -19,31 +26,69 @@ func NewValidation(cfg *config.Config, log *zap.Logger) *Validation {
 	}
 }
 
-func (val *Validation) validateUserAnswers(q domain.Question, a domain.UserAnswerModel) bool {
-	const op = "testsservice.validation.validateUserAnswers"
+func (val *Validation) ValidateTest(test domain.Test) error {
+	const op = "testsservice.validation.ValidateTest"
+	log := val.log.With(zap.String("op", op))
+
+	validated := false
+	switch *test.Type {
+	// Form that is to gather information from one person (or group of people)
+	// Should NOT contain correct answers in each question
+	case domain.TestTypeForm:
+		validated = val.validateForm(test)
+	// Quiz that is to gather information from one person or group of people
+	// Used to collect a lot of respondents and combine and analyze final result (social quiz's)
+	// Should NOT contain correct answers in each question
+	case domain.TestTypeQuiz:
+		validated = val.validateQuiz(test)
+	// Test used to collect some not strict answers and produce some final result
+	// This result is not strict and based on the answers provided
+	// This test MUST contain correct answers in each question in correct syntax
+	case domain.TestTypeTest:
+		validated = val.validateTest(test)
+	// Strict test used to collect some strict answers and produce some final result
+	// This result contains percentage of right answers in all test
+	// This test MUST contain correct answers in each question in correct syntax
+	case domain.TestTypeStrictTest:
+		validated = val.validateStrictTest(test)
+	default:
+		log.Error("unknown test type", zap.String("type", *test.Type))
+		validated = false
+	}
+
+	if !validated {
+		log.Error("failed test validation")
+		return fmt.Errorf("%s: %w", op, fmt.Errorf("%s: %w", op, ErrFailedTestValidation))
+	}
+
+	return nil
+}
+
+func (val *Validation) ValidateUserAnswers(q domain.Question, a domain.UserAnswerModel) error {
+	const op = "testsservice.validation.ValidateUserAnswers"
 	log := val.log.With(zap.String("op", op), zap.String("qtype", *q.Type))
 
 	switch *q.Type {
 	case domain.QuestionTypeSingleChoice:
 		if a.ChosenID == nil {
 			log.Error("no chosen id")
-			return false
+			return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 		}
 		for _, v := range *q.Variants.SingleChoice.Fields {
 			if v.FieldID == *a.ChosenID {
-				return true
+				return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 			}
 		}
 		log.Error("chosen id is not in variants")
-		return false
+		return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 	case domain.QuestionTypeMultipleChoice:
 		if a.ChosenIDs == nil {
 			log.Error("no chosen ids")
-			return false
+			return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 		}
 		if slice.ContainsRepeated(*a.ChosenIDs) {
 			log.Error("repeated chosen ids")
-			return false
+			return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 		}
 		met := make(map[int]struct{})
 		for _, v := range *q.Variants.MultipleChoice.Fields {
@@ -52,20 +97,20 @@ func (val *Validation) validateUserAnswers(q domain.Question, a domain.UserAnswe
 		for _, v := range *a.ChosenIDs {
 			if _, ok := met[v]; !ok {
 				log.Error("chosen id is not in variants")
-				return false
+				return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 			}
 		}
-		return true
 	case domain.QuestionTypeManualInput:
 		if a.WritedText == nil {
 			log.Error("no writed text")
-			return false
+			return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 		}
-		return true
 	default:
 		log.Error("invalid question type")
-		return false
+		return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
 	}
+
+	return nil
 }
 
 func (val *Validation) validateForm(test domain.Test) bool {
@@ -218,8 +263,6 @@ func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bo
 				log.Error("no correct answers")
 				return false
 			}
-
-			return true
 		}
 	case domain.QuestionTypeManualInput:
 		if checkAnswers {
@@ -232,14 +275,12 @@ func (val *Validation) validateQuestion(q domain.Question, checkAnswers bool) bo
 				log.Error("no required CorrectText for manualInput model")
 				return false
 			}
-			return true
 		}
 	default:
 		log.Error("unknown question type")
 		return false
 	}
 
-	log.Info("question was validated successfully")
 	return true
 }
 
