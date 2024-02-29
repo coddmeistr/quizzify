@@ -7,6 +7,7 @@ toolchain go1.22.0
 require (
 	github.com/brianvoe/gofakeit/v7 v7.0.1
 	github.com/golang-migrate/migrate/v4 v4.17.0
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/ilyakaznacheev/cleanenv v1.5.0

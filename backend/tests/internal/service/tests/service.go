@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
+//go:generate mockery --name Storage
 type Storage interface {
 	CreateTest(ctx context.Context, test domain.Test) error
 	UpdateTest(ctx context.Context, testID string, test domain.Test) error
@@ -22,13 +23,14 @@ type Storage interface {
 	SaveUserResult(ctx context.Context, result domain.Result) error
 }
 
+//go:generate mockery --name Validator
 type Validator interface {
 	ValidateTest(test domain.Test) error
 	ValidateUserAnswers(q domain.Question, a domain.UserAnswerModel) error
 }
 
 var (
-	ErrNoRights             = errors.New("forbidden action")
+	ErrNoRights             = errors.New("no rights to perform")
 	ErrInvalidTestType      = errors.New("invalid test type")
 	ErrFailedTestValidation = errors.New("failed test validation")
 	ErrNotFound             = errors.New("not found")
