@@ -76,7 +76,7 @@ func (val *Validation) ValidateUserAnswers(q domain.Question, a domain.UserAnswe
 		}
 		for _, v := range *q.Variants.SingleChoice.Fields {
 			if v.FieldID == *a.ChosenID {
-				return fmt.Errorf("%s: %w", op, ErrFailedUserAnswersValidation)
+				return nil
 			}
 		}
 		log.Error("chosen id is not in variants")
