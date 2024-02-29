@@ -34,6 +34,7 @@ var (
 	ErrInvalidTestType      = errors.New("invalid test type")
 	ErrFailedTestValidation = errors.New("failed test validation")
 	ErrNotFound             = errors.New("not found")
+	ErrNoUserAnswer         = errors.New("no user answer")
 )
 
 type Service struct {
@@ -67,55 +68,90 @@ func (s *Service) ApplyTest(ctx context.Context, testID string, UserID int, answ
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	switch *test.Type {
-	case domain.TestTypeForm:
+	handleQuestions := func(handler func(domain.Question, domain.UserAnswerModel)) ([]domain.UserAnswerModel, error) {
 		ua := make([]domain.UserAnswerModel, 0, len(answers))
 		for _, q := range *test.Questions {
-			if err := s.validation.ValidateUserAnswers(*q, answers[q.ID]); err != nil {
-				log.Error("failed to validate user answers", zap.Error(err))
-				return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
+			answer, has := answers[q.ID]
+			if !has {
+				if q.Required {
+					log.Warn("no user answer on required question", zap.Int("question_id", q.ID))
+					return nil, fmt.Errorf("%s: %w", op, ErrNoUserAnswer)
+				}
+				log.Warn("no user answer on question", zap.Int("question_id", q.ID))
+				continue
 			}
-			ua = append(ua, answers[q.ID])
-		}
-
-		err := s.storage.SaveUserResult(ctx, domain.Result{
-			TestID:      testID,
-			UserID:      UserID,
-			UserAnswers: ua,
-		})
-		if err != nil {
-			log.Error("failed to save user result", zap.Error(err))
-			return fmt.Errorf("%s: %w", op, err)
-		}
-	case domain.TestTypeQuiz:
-		log.Error("NOT IMPLEMENTED")
-	case domain.TestTypeStrictTest:
-		maxPoints := 0
-		points := 0
-		ua := make([]domain.UserAnswerModel, 0, len(answers))
-		for _, q := range *test.Questions {
-			if err := s.validation.ValidateUserAnswers(*q, answers[q.ID]); err != nil {
+			if err := s.validation.ValidateUserAnswers(*q, answer); err != nil {
 				log.Error("failed to validate user answers", zap.Error(err))
-				return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
+				return nil, fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
 			}
-			maxPoints += *q.Points
-			got := q.ComparePreciseResults(answers[q.ID])
-			points += int((float64(got) / 100.0) * float64(*q.Points))
-			ua = append(ua, answers[q.ID])
+			handler(*q, answer)
+			ua = append(ua, answer)
 		}
+		return ua, nil
+	}
 
-		err := s.storage.SaveUserResult(ctx, domain.Result{
-			TestID:      testID,
-			UserID:      UserID,
-			UserAnswers: ua,
-			Percentage:  p.Int(int(float64(points) / float64(maxPoints) * 100)),
-		})
+	saveResults := func(r domain.Result) error {
+		err := s.storage.SaveUserResult(ctx, r)
 		if err != nil {
 			log.Error("failed to save user test result", zap.Error(err))
 			return fmt.Errorf("%s: %w", op, err)
 		}
+		return nil
+	}
+
+	switch *test.Type {
+	case domain.TestTypeForm:
+		ua, err := handleQuestions(func(q domain.Question, a domain.UserAnswerModel) {})
+		if err != nil {
+			return err
+		}
+
+		err = saveResults(domain.Result{
+			TestID:      testID,
+			UserID:      UserID,
+			UserAnswers: ua,
+		})
+		if err != nil {
+			return err
+		}
+	case domain.TestTypeQuiz:
+		ua, err := handleQuestions(func(q domain.Question, a domain.UserAnswerModel) {})
+		if err != nil {
+			return err
+		}
+
+		err = saveResults(domain.Result{
+			TestID:      testID,
+			UserID:      UserID,
+			UserAnswers: ua,
+		})
+		if err != nil {
+			return err
+		}
+	case domain.TestTypeStrictTest:
+		maxPoints := 0
+		points := 0
+		ua, err := handleQuestions(func(q domain.Question, a domain.UserAnswerModel) {
+			maxPoints += *q.Points
+			got := q.ComparePreciseResults(answers[q.ID])
+			points += int((float64(got) / 100.0) * float64(*q.Points))
+		})
+		if err != nil {
+			return err
+		}
+
+		err = saveResults(domain.Result{
+			TestID:      testID,
+			UserID:      UserID,
+			UserAnswers: ua,
+			Percentage:  p.Int(int(float64(points) / float64(maxPoints) * 100.0)),
+		})
+		if err != nil {
+			return err
+		}
 	case domain.TestTypeTest:
 		log.Error("NOT IMPLEMENTED")
+		return fmt.Errorf("%s: %w", op, errors.New("SAVING RESULTS FOR TEST OF TYPE TEST NOT IMPLEMENTED"))
 	default:
 		log.Error("invalid test type", zap.String("type", *test.Type))
 		return fmt.Errorf("%s: %w", op, ErrInvalidTestType)
