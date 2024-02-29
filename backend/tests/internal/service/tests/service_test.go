@@ -7,6 +7,7 @@ import (
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/helpers/user"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/service/tests/mocks"
+	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/storage"
 	p "github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/pointer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -168,7 +169,7 @@ func TestService_DeleteTest(t *testing.T) {
 			wantError: true,
 			err:       errors.New("not found"),
 			mockF: func(st *mocks.Storage) {
-				st.On("GetTestByID", mock.Anything, validTestId, false).Return(nil, errors.New("not found")).Once()
+				st.On("GetTestByID", mock.Anything, validTestId, false).Return(nil, storage.ErrNotFound).Once()
 			},
 		},
 		{
@@ -202,6 +203,25 @@ func TestService_DeleteTest(t *testing.T) {
 				}
 				st.On("GetTestByID", mock.Anything, validTestId, false).Return(gotTest, nil).Once()
 				st.On("DeleteTest", mock.Anything, validTestId).Return(errors.New("some error while deleting test")).Once()
+			},
+		},
+		{
+			name: "not found test when deleting",
+			args: args{
+				ctx: context.WithValue(context.Background(), user.AuthInfoKey, user.Info{
+					ID: 1,
+				}),
+				testID: validTestId,
+			},
+			wantError: true,
+			err:       storage.ErrNotFound,
+			mockF: func(st *mocks.Storage) {
+				gotTest := &domain.Test{
+					ID:     &validTestId,
+					UserID: p.Int(1),
+				}
+				st.On("GetTestByID", mock.Anything, validTestId, false).Return(gotTest, nil).Once()
+				st.On("DeleteTest", mock.Anything, validTestId).Return(storage.ErrNotFound).Once()
 			},
 		},
 	}
