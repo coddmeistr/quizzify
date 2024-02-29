@@ -78,6 +78,7 @@ func (s *Service) ApplyTest(ctx context.Context, testID string, UserID int, answ
 					return nil, fmt.Errorf("%s: %w", op, ErrNoUserAnswer)
 				}
 				log.Warn("no user answer on question", zap.Int("question_id", q.ID))
+				handler(*q, domain.UserAnswerModel{QuestionID: 0}) // When no answers, pass empty struct to the handler
 				continue
 			}
 			if err := s.validation.ValidateUserAnswers(*q, answer); err != nil {
@@ -132,8 +133,12 @@ func (s *Service) ApplyTest(ctx context.Context, testID string, UserID int, answ
 		maxPoints := 0
 		points := 0
 		ua, err := handleQuestions(func(q domain.Question, a domain.UserAnswerModel) {
+			if a.QuestionID == 0 {
+				maxPoints += *q.Points
+				return
+			}
 			maxPoints += *q.Points
-			got := q.ComparePreciseResults(answers[q.ID])
+			got := q.ComparePreciseResults(a)
 			points += int((float64(got) / 100.0) * float64(*q.Points))
 		})
 		if err != nil {
