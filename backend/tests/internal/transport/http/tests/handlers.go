@@ -18,7 +18,7 @@ import (
 )
 
 type Service interface {
-	CreateTest(ctx context.Context, test domain.Test) error
+	CreateTest(ctx context.Context, test domain.Test) (string, error)
 	UpdateTest(ctx context.Context, testID string, test domain.Test) error
 	DeleteTest(ctx context.Context, testID string) error
 	GetTestByID(ctx context.Context, testID string, provideAnswers bool) (*domain.Test, error)
@@ -221,7 +221,8 @@ func (h *Handlers) CreateTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.srv.CreateTest(r.Context(), *req.Test.ToDomain()); err != nil {
+	id, err := h.srv.CreateTest(r.Context(), *req.Test.ToDomain())
+	if err != nil {
 		if errors.Is(err, testsservice.ErrInvalidTestType) {
 			ahttp.WriteError(w, ahttp.ErrInvalidTestType)
 			return
@@ -238,7 +239,7 @@ func (h *Handlers) CreateTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ahttp.WriteResponse(w, http.StatusCreated, "test was created")
+	ahttp.WriteResponse(w, http.StatusCreated, id)
 }
 
 func (h *Handlers) UpdateTestPreview(w http.ResponseWriter, r *http.Request) {

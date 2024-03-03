@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/helpers/user"
@@ -242,23 +243,26 @@ func (s *Service) DeleteTest(ctx context.Context, testID string) error {
 	return nil
 }
 
-func (s *Service) CreateTest(ctx context.Context, test domain.Test) error {
+func (s *Service) CreateTest(ctx context.Context, test domain.Test) (string, error) {
 	const op = "service.testsservice.CreateTest"
 	log := s.log.With(zap.String("op", op))
 	log.Info("creating new test")
 
+	id := uuid.New().String()
+	test.ID = &id
+
 	if err := s.validation.ValidateTest(test); err != nil {
 		log.Error("failed to validate test", zap.Error(err))
-		return fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
+		return "", fmt.Errorf("%s: %w", op, ErrFailedTestValidation)
 	}
 
 	if err := s.storage.CreateTest(ctx, test); err != nil {
 		s.log.Error("failed to create test", zap.Error(err))
-		return fmt.Errorf("%s: %w", op, err)
+		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("test was created successfully")
-	return nil
+	return id, nil
 }
 
 func (s *Service) UpdateTest(ctx context.Context, testID string, update domain.Test) error {
