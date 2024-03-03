@@ -34,6 +34,11 @@ type CreateTestRequest struct {
 	Test
 }
 
+type GetTestResponse struct {
+	ID string `json:"id"`
+	Test
+}
+
 type Test struct {
 	Title     *string      `json:"title" validate:"required"`
 	CreatorID *int         `json:"creator_id" validate:"required"`
