@@ -2,7 +2,7 @@ package domain
 
 type Test struct {
 	ID     *string `json:"id" bson:"_id"`
-	UserID *int    `json:"user_id" bson:"user_id"`
+	UserID *int    `json:"creator_id" bson:"creator_id"`
 	Type   *string `json:"type" bson:"type"`
 
 	Title     *string `json:"title" bson:"title"`
