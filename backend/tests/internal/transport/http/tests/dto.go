@@ -1,7 +1,6 @@
 package testshandlers
 
 import (
-	"github.com/google/uuid"
 	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/domain"
 )
 
@@ -105,8 +104,6 @@ func (a *UserAnswer) ToDomain() *domain.UserAnswerModel {
 
 func (t *Test) ToDomain() *domain.Test {
 
-	id := uuid.New().String()
-
 	domainQuestions := make([]*domain.Question, 0, len(*t.Questions))
 	for _, v := range *t.Questions {
 		domainQuestions = append(domainQuestions, v.ToDomain())
@@ -118,7 +115,6 @@ func (t *Test) ToDomain() *domain.Test {
 	}
 
 	return &domain.Test{
-		ID:        &id,
 		Title:     t.Title,
 		UserID:    t.CreatorID,
 		Type:      t.Type,
