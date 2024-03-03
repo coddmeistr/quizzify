@@ -12,10 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
+	"reflect"
 	"testing"
 )
 
 func TestService_CreateTest(t *testing.T) {
+	testType := reflect.TypeOf(domain.Test{}).String()
 
 	type args struct {
 		test domain.Test
@@ -35,8 +37,8 @@ func TestService_CreateTest(t *testing.T) {
 			wantError: false,
 			err:       nil,
 			mockF: func(st *mocks.Storage, val *mocks.Validator) {
-				val.On("ValidateTest", domain.Test{}).Return(nil).Once()
-				st.On("CreateTest", context.Background(), domain.Test{}).Return(nil).Once()
+				val.On("ValidateTest", mock.AnythingOfType(testType)).Return(nil).Once()
+				st.On("CreateTest", context.Background(), mock.AnythingOfType(testType)).Return(nil).Once()
 			},
 		},
 		{
@@ -47,7 +49,7 @@ func TestService_CreateTest(t *testing.T) {
 			wantError: true,
 			err:       errors.New("failed test validation"),
 			mockF: func(st *mocks.Storage, val *mocks.Validator) {
-				val.On("ValidateTest", domain.Test{}).Return(errors.New("failed test validation")).Once()
+				val.On("ValidateTest", mock.AnythingOfType(testType)).Return(errors.New("failed test validation")).Once()
 			},
 		},
 		{
@@ -58,8 +60,8 @@ func TestService_CreateTest(t *testing.T) {
 			wantError: true,
 			err:       errors.New("some error occured"),
 			mockF: func(st *mocks.Storage, val *mocks.Validator) {
-				val.On("ValidateTest", domain.Test{}).Return(nil).Once()
-				st.On("CreateTest", context.Background(), domain.Test{}).Return(errors.New("some error occured")).Once()
+				val.On("ValidateTest", mock.AnythingOfType(testType)).Return(nil).Once()
+				st.On("CreateTest", context.Background(), mock.AnythingOfType(testType)).Return(errors.New("some error occured")).Once()
 			},
 		},
 	}
@@ -75,7 +77,7 @@ func TestService_CreateTest(t *testing.T) {
 			tt.mockF(mockSt, mockVal)
 
 			s := New(zap.NewExample(), &config.Config{}, mockSt, mockVal)
-			got := s.CreateTest(context.Background(), tt.args.test)
+			_, got := s.CreateTest(context.Background(), tt.args.test)
 
 			if tt.wantError {
 				assert.Containsf(t, got.Error(), tt.err.Error(), "expected error containing %q, got %s", tt.err.Error(), got.Error())
