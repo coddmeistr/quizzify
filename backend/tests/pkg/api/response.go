@@ -6,9 +6,9 @@ import (
 )
 
 type Response struct {
-	Code    int    `json:"code"`
-	Error   *Error `json:"error"`
-	Payload *any   `json:"payload"`
+	Code    int             `json:"code"`
+	Error   *Error          `json:"error"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 type Error struct {
@@ -75,10 +75,16 @@ func WriteErrorMessage(w http.ResponseWriter, code int, ecode string, msg string
 }
 
 func WriteResponse(w http.ResponseWriter, code int, response any) {
+	w.Header().Set("Content-Type", "application/json")
+	jsonMsg, err := json.Marshal(response)
+	if err != nil {
+		WriteErrorMessage(w, http.StatusInternalServerError, "INTERNAL", "failed to marshal response")
+		return
+	}
 	bytes, err := json.Marshal(&Response{
 		Code:    code,
 		Error:   nil,
-		Payload: &response,
+		Payload: jsonMsg,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
