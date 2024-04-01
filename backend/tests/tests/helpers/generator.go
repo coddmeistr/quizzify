@@ -73,7 +73,7 @@ func GenerateRandomTest(t string) Test {
 		case QuestionTypeMultipleChoice:
 			fieldsCount := numbers.RandomInt(VariantsMin, VariantsMax)
 			fields := make([]*VariantField, 0, fieldsCount)
-			correctIDs := make([]int, 0, 0)
+			correctIDs := make([]int, 0)
 			for j := 0; j < fieldsCount; j++ {
 				text := faker.ProductDescription()
 				field := VariantField{

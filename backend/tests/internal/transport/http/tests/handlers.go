@@ -114,7 +114,7 @@ func (h *Handlers) ApplyTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ahttp.WriteResponse(w, http.StatusOK, "applied")
+	ahttp.WriteResponse(w, http.StatusOK, "test was applied")
 }
 
 func (h *Handlers) GetTests(w http.ResponseWriter, r *http.Request) {
