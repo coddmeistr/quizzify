@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/api"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/tests/helpers"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/api"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/tests/helpers"
 	"io"
 	"net/http"
 )

@@ -7,9 +7,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/domain/models"
-	appjwt "github.com/maxik12233/quizzify-online-tests/backend/sso/internal/lib/jwt"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/storage"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/domain/models"
+	appjwt "github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/lib/jwt"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/storage"
 	"golang.org/x/crypto/bcrypt"
 )
 

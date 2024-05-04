@@ -2,11 +2,11 @@ package app
 
 import (
 	"errors"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/app/mongoapp"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/app/rest"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/storage/mongo"
-	errs "github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/errors"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/app/mongoapp"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/app/rest"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/config"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/storage/mongo"
+	errs "github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/errors"
 	"go.uber.org/zap"
 )
 

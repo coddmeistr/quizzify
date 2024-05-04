@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/storage"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/storage"
 )
 
 type PermissionManipulator interface {

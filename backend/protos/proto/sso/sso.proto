@@ -2,12 +2,18 @@ syntax = "proto3";
 
 package auth;
 
+import "google/api/annotations.proto";
+
 option go_package = "quizzify.sso.v1;ssov1;";
 
 service Auth {
     rpc Register (RegisterRequest) returns (RegisterResponse);
     rpc Login (LoginRequest) returns (LoginResponse);
-    rpc IsAdmin (IsAdminRequest) returns (IsAdminResponse);
+    rpc IsAdmin (IsAdminRequest) returns (IsAdminResponse) {
+        option (google.api.http) = {
+            get: "/sso/is_admin/{user_id}"
+        };
+    };
 }
 
 service Permission {

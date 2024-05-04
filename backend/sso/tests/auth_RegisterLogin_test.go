@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
+	ssov1 "github.com/coddmeistr/quizzify-online-tests/backend/protos/proto/sso"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/tests/suits"
 	"github.com/golang-jwt/jwt/v5"
-	ssov1 "github.com/maxik12233/quizzify-online-tests/backend/protos/gen/go/sso"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/tests/suits"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

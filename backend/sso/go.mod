@@ -1,11 +1,11 @@
-module github.com/maxik12233/quizzify-online-tests/backend/sso
+module github.com/coddmeistr/quizzify-online-tests/backend/sso
 
 go 1.21.1
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/jackc/pgx/v5 v5.5.3
-	github.com/maxik12233/quizzify-online-tests/backend/protos v0.0.0-20240214212525-a23decdb40ec
+	github.com/coddmeistr/quizzify-online-tests/backend/protos v0.0.0-20240214212525-a23decdb40ec
 	github.com/stretchr/testify v1.8.3
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0

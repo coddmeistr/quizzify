@@ -16,14 +16,14 @@ type Config struct {
 }
 
 type GRPCConfig struct {
-	Port    int           `yaml:"port" env-default:"40000"`
+	Port    int           `yaml:"port" env-default:"8000"`
 	Timeout time.Duration `yaml:"timeout" env-default:"5s"`
 }
 
 func MustLoad() *Config {
 	cfgPath := fetchConfigPath()
 	if cfgPath == "" {
-		panic("config path is empty")
+		panic("config file path is not defined")
 	}
 
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {

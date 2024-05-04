@@ -3,9 +3,9 @@ package http
 import (
 	"errors"
 	"fmt"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/config"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/api"
 	"github.com/go-playground/validator/v10"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/api"
 
 	"go.uber.org/zap"
 	"net/http"

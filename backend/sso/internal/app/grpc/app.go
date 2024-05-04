@@ -6,10 +6,10 @@ import (
 
 	"log/slog"
 
-	authgrpc "github.com/maxik12233/quizzify-online-tests/backend/sso/internal/grpc/auth"
-	permissionsgrpc "github.com/maxik12233/quizzify-online-tests/backend/sso/internal/grpc/permissions"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/services/auth"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/services/permissions"
+	authgrpc "github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/grpc/auth"
+	permissionsgrpc "github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/grpc/permissions"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/services/auth"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/services/permissions"
 	"google.golang.org/grpc"
 )
 
@@ -46,7 +46,7 @@ func (a *App) Run() error {
 	const op = "grpcapp.Run"
 	log := a.log.With(slog.String("op", op), slog.Int("port", a.port))
 
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
+	l, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", a.port))
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

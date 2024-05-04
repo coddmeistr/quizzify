@@ -3,14 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 
 	"log/slog"
 
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/app"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/config"
 	"github.com/joho/godotenv"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/app"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/config"
 )
 
 const (
@@ -27,6 +28,17 @@ func main() {
 	cfg := config.MustLoad()
 
 	log := setupLogger(cfg.Env)
+
+	log.Info("Doing migrations")
+	output, err := exec.Command("/sso/migrator",
+		fmt.Sprintf("--postgres-url=%s", cfg.PostgresUrl),
+		fmt.Sprintf("--migrations-path=%s", "/sso/migrations")).
+		Output()
+	if err != nil {
+		log.Error("Failed migrations", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	log.Info("Migrations done", slog.String("output", string(output)))
 
 	log.Info("Starting application", slog.Any("config", cfg))
 

@@ -3,8 +3,8 @@ package appjwt
 import (
 	"time"
 
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/domain/models"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/domain/models"
 )
 
 func NewToken(user models.User, perms []int, app models.App, duration time.Duration) (string, error) {

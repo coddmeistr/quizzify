@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/app"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/config"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/logger/zaplogger"
 	"github.com/joho/godotenv"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/app"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/logger/zaplogger"
 	"go.uber.org/zap"
 	"os"
 	"os/signal"

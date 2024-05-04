@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/domain/models"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/storage"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/domain/models"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/storage"
 )
 
 type Storage struct {
@@ -21,10 +21,6 @@ func New(connectionString string) (*Storage, error) {
 	const op = "storage.postgres.New"
 
 	pool, err := pgxpool.New(context.Background(), connectionString)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

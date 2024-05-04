@@ -24,6 +24,7 @@ func MaxInt[T constraints.Integer](arr []T) T {
 	return m
 }
 
+// ContainsRepeated checks if slice contains duplicate items
 func ContainsRepeated[T comparable](arr []T) bool {
 	met := make(map[T]struct{})
 	for _, v := range arr {

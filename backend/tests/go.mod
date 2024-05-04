@@ -1,4 +1,4 @@
-module github.com/maxik12233/quizzify-online-tests/backend/tests
+module github.com/coddmeistr/quizzify-online-tests/backend/tests
 
 go 1.22
 

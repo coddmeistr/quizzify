@@ -1,9 +1,9 @@
 package testshandlers
 
 import (
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/config"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/transport/http"
 	"github.com/go-playground/validator/v10"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/transport/http"
 )
 
 type TestValidator struct {

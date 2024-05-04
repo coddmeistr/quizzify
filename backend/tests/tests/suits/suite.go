@@ -1,7 +1,7 @@
 package suits
 
 import (
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/internal/config"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/config"
 	"net/http"
 	"os"
 	"testing"

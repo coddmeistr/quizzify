@@ -5,10 +5,10 @@ import (
 
 	"log/slog"
 
-	grpcapp "github.com/maxik12233/quizzify-online-tests/backend/sso/internal/app/grpc"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/services/auth"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/services/permissions"
-	"github.com/maxik12233/quizzify-online-tests/backend/sso/internal/storage/postgres"
+	grpcapp "github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/app/grpc"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/services/auth"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/services/permissions"
+	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/storage/postgres"
 )
 
 type App struct {

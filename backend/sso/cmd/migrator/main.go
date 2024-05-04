@@ -21,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	if connectionString == "" {
-		panic("mongoapp-url is empty")
+		panic("postgres-url is empty")
 	}
 
 	if migrationsPath == "" {

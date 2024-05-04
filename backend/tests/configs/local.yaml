@@ -2,8 +2,8 @@ env: "local"
 mongodb:
   database-name: "quizzify-tests"
 http-server:
-  port: "8080"
-  host: "localhost"
+  port: "80"
+  host: "0.0.0.0"
   timeout: 5s
   idle-timeout: 10s
   max-connections: 100

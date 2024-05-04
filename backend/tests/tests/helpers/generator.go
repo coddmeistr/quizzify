@@ -2,8 +2,8 @@ package helpers
 
 import (
 	"github.com/brianvoe/gofakeit/v7"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/numbers"
-	p "github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/pointer"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/numbers"
+	p "github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/pointer"
 	"time"
 )
 

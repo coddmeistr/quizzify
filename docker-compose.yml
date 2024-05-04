@@ -1,0 +1,144 @@
+version: "3.8"
+services:
+  proxy:
+    image: traefik:latest
+    restart: always
+    labels:
+      - traefik.http.routers.api.rule=Host(`traefik.${BASE_DOMAIN}`)
+      - traefik.http.routers.api.entrypoints=http
+      - traefik.http.routers.api.service=api@internal
+    ports:
+      - "80:80"
+      - "8000:8000"
+    volumes:
+      - ./traefik.yml:/traefik.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - proxy
+
+#  web:
+#    build: ./frontend
+#    restart: always
+#    depends_on:
+#      - proxy
+#    labels:
+#      - traefik.http.routers.web.rule=Host(`api.${BASE_DOMAIN}`)
+#      - traefik.http.routers.web.entrypoints=http
+#      - traefik.http.routers.web.service=web@docker
+#      - traefik.http.services.web.loadbalancer.server.port=8000
+#      - traefik.http.routers.web_ui.rule=Host(`api.${BASE_DOMAIN}`)&&PathPrefix(`/admin`)
+#      - traefik.http.routers.web_ui.entrypoints=http
+#      - traefik.http.routers.web_ui.service=web_ui@docker
+#      - traefik.http.routers.web_ui.middlewares=web_ui_stripprefix
+#      - traefik.http.middlewares.web_ui_stripprefix.stripprefix.prefixes=/admin
+#      - traefik.http.services.web_ui.loadbalancer.server.port=8080
+#    environment:
+#      LOG_LEVEL: -1
+#      WITH_BLOCK: "false"
+#      APISERVER_HOST: "proxy:8000"
+#    networks:
+#      - proxy
+
+  tests:
+    build: ./backend/tests
+    restart: always
+    labels:
+      - traefik.http.routers.tests.rule=Host(`api.${BASE_DOMAIN}`)
+      - traefik.http.routers.tests.entrypoints=http
+      - traefik.http.services.tests.loadbalancer.server.port=80
+    depends_on:
+      - mongodb
+      - sso
+    networks:
+      - proxy
+      - mongodb
+      - internal
+    environment:
+      CONFIG_PATH: "/tests-server/configs/local.yaml"
+      SIGNING_KEY: "${SIGNING_KEY}"
+      MONGO_CONNECTION_URI: "mongodb://root:admin@mongodb:27017/"
+    links:
+      - mongodb
+
+  sso:
+    build: ./backend/sso
+    restart: always
+    labels:
+      - traefik.http.routers.sso.rule=Host(`sso.${BASE_DOMAIN}`)
+      - traefik.http.routers.sso.entrypoints=grpc
+      - traefik.http.services.sso.loadbalancer.server.port=8000
+      - traefik.http.services.sso.loadbalancer.server.scheme=h2c
+    depends_on:
+      - postgres
+    networks:
+      - proxy
+      - postgres
+      - internal
+    environment:
+      CONFIG_PATH: "/sso/config/local.yaml"
+      SIGNING_KEY: "${SIGNING_KEY}"
+      POSTGRES_URL: "postgres://root:admin@postgres:5432/db?sslmode=disable"
+    links:
+      - postgres
+
+  mongodb:
+    image: mongo:7-jammy
+    restart: unless-stopped
+    labels:
+      - traefik.http.routers.db.rule=Host(`mongo.${BASE_DOMAIN}`)
+      - traefik.http.routers.db.entrypoints=http
+      - traefik.http.services.db.loadbalancer.server.port=27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "admin"
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - proxy
+      - mongodb
+
+  postgres:
+    image: postgres:16.2
+    restart: unless-stopped
+    labels:
+      - traefik.http.routers.db.rule=Host(`pg.${BASE_DOMAIN}`)
+      - traefik.http.routers.db.entrypoints=http
+      - traefik.http.services.db.loadbalancer.server.port=5432
+    environment:
+      POSTGRES_DB: "db"
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - proxy
+      - postgres
+
+networks:
+  proxy:
+    driver: bridge
+  mongodb:
+    driver: bridge
+  postgres:
+    driver: bridge
+  internal:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongo-data:

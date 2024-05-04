@@ -2,7 +2,7 @@ package sort
 
 import (
 	"context"
-	"github.com/maxik12233/quizzify-online-tests/backend/tests/pkg/api"
+	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/api"
 	"net/http"
 	"strings"
 )
