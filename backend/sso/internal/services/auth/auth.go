@@ -98,15 +98,14 @@ func (a *Auth) Login(ctx context.Context, login string, email string, password s
 	app, err := a.appProvider.App(ctx, appID)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
-			log.Warn("app not found", slog.String("error", err.Error()))
-			return "", fmt.Errorf("%s: %w", op, ErrAppNotFound)
+			log.Warn("app not found. App logic is not implemented", slog.String("error", err.Error()))
+		} else {
+			log.Error("failed getting current app", slog.String("error", err.Error()))
+			return "", fmt.Errorf("%s: %w", op, err)
 		}
-
-		log.Error("failed getting current app", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	log.Info("user logged in sucesesfully")
+	log.Info("user logged in successfully")
 
 	perms, err := a.permsProvider.UserPermissions(ctx, int64(user.ID))
 	if err != nil {
