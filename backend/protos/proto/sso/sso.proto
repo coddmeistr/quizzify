@@ -7,8 +7,18 @@ import "google/api/annotations.proto";
 option go_package = "quizzify.sso.v1;ssov1;";
 
 service Auth {
-    rpc Register (RegisterRequest) returns (RegisterResponse);
-    rpc Login (LoginRequest) returns (LoginResponse);
+    rpc Register (RegisterRequest) returns (RegisterResponse){
+        option (google.api.http) = {
+            post: "/sso/register"
+            body: "*"
+        };
+    }
+    rpc Login (LoginRequest) returns (LoginResponse){
+        option (google.api.http) = {
+            post: "/sso/login"
+            body: "*"
+        };
+    }
     rpc IsAdmin (IsAdminRequest) returns (IsAdminResponse) {
         option (google.api.http) = {
             get: "/sso/is_admin/{user_id}"
@@ -17,8 +27,17 @@ service Auth {
 }
 
 service Permission {
-    rpc AddPermission (AddPermissionRequest) returns (AddPermissionResponse);
-    rpc RemovePermission (RemovePermissionRequest) returns (RemovePermissionResponse);
+    rpc AddPermission (AddPermissionRequest) returns (AddPermissionResponse){
+        option (google.api.http) = {
+            post: "/sso/permission"
+            body: "*"
+        };
+    }
+    rpc RemovePermission (RemovePermissionRequest) returns (RemovePermissionResponse){
+        option (google.api.http) = {
+            delete: "/sso/{user_id}/permission/{permission_id}"
+        };
+    }
 }
 
 message AddPermissionRequest {

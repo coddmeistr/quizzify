@@ -2,12 +2,12 @@ package grpcapp
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc/credentials/insecure"
 	"net"
 	"net/http"
+	"os"
 
 	"log/slog"
 
@@ -20,6 +20,8 @@ import (
 	gw "github.com/coddmeistr/quizzify-online-tests/backend/protos/proto/sso"
 )
 
+const gatewayPort = ":8001"
+
 type App struct {
 	log        *slog.Logger
 	authSrv    *auth.Auth
@@ -28,13 +30,8 @@ type App struct {
 	port       int
 }
 
-var (
-	// command-line options:
-	// gRPC server endpoint
-	grpcServerEndpoint = flag.String("grpc-server-endpoint", "0.0.0.0:8000", "gRPC server endpoint")
-)
-
-func run() error {
+// REST Gateway
+func run(log *slog.Logger, grpcAddr string) error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -43,14 +40,18 @@ func run() error {
 	// Note: Make sure the gRPC server is running properly and accessible
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	err := gw.RegisterAuthHandlerFromEndpoint(ctx, mux, *grpcServerEndpoint, opts)
+	err := gw.RegisterAuthHandlerFromEndpoint(ctx, mux, grpcAddr, opts)
 	if err != nil {
-		fmt.Println("Failed to register gRPC gateway:", err)
+		return err
+	}
+	err = gw.RegisterPermissionHandlerFromEndpoint(ctx, mux, grpcAddr, opts)
+	if err != nil {
 		return err
 	}
 
 	// Start HTTP server (and proxy calls to gRPC server endpoint)
-	return http.ListenAndServe(":8001", mux)
+	log.Info("gRPC Gateway is listening on port " + gatewayPort)
+	return http.ListenAndServe(gatewayPort, mux)
 }
 
 func New(log *slog.Logger, auth *auth.Auth, perm *permissions.Permissions, port int) *App {
@@ -83,10 +84,15 @@ func (a *App) Run() error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
+	log.Info("Starting gRPC gateway")
+	go func() {
+		if err := run(log, l.Addr().String()); err != nil {
+			log.Error("FATAL: gRPC gateway error", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+	}()
+
 	log.Info("gRPC tests-server is running", slog.String("addr", l.Addr().String()))
-
-	go run()
-
 	if err := a.gRPCServer.Serve(l); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

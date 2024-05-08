@@ -50,9 +50,160 @@
           "Auth"
         ]
       }
+    },
+    "/sso/login": {
+      "post": {
+        "operationId": "Auth_Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authLoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authLoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/sso/permission": {
+      "post": {
+        "operationId": "Permission_AddPermission",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authAddPermissionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authAddPermissionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Permission"
+        ]
+      }
+    },
+    "/sso/register": {
+      "post": {
+        "operationId": "Auth_Register",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authRegisterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authRegisterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/sso/{userId}/permission/{permissionId}": {
+      "delete": {
+        "operationId": "Permission_RemovePermission",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authRemovePermissionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "description": "User ID of the user to remove permission from.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "permissionId",
+            "description": "Permission ID of removen permission.",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Permission"
+        ]
+      }
     }
   },
   "definitions": {
+    "authAddPermissionRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "int64",
+          "description": "User ID of the user to give permission to."
+        },
+        "permissionId": {
+          "type": "string",
+          "format": "int64",
+          "description": "Permission ID of given permission."
+        }
+      }
+    },
     "authAddPermissionResponse": {
       "type": "object",
       "properties": {
@@ -71,12 +222,51 @@
         }
       }
     },
+    "authLoginRequest": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string",
+          "description": "Login of the user to login."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email of the user to login (Using when login field is empty string)."
+        },
+        "password": {
+          "type": "string",
+          "description": "Password of the user to login."
+        },
+        "appId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "App ID to login to."
+        }
+      }
+    },
     "authLoginResponse": {
       "type": "object",
       "properties": {
         "token": {
           "type": "string",
           "description": "Authorization token of the logged in user."
+        }
+      }
+    },
+    "authRegisterRequest": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string",
+          "description": "Login of user to register."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email of user to register."
+        },
+        "password": {
+          "type": "string",
+          "description": "Password of user to register."
         }
       }
     },
