@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 	"os"
 	"time"
@@ -27,7 +28,7 @@ type HTTPServer struct {
 }
 
 type MongoDB struct {
-	ConnectionURI string `env:"MONGO_CONNECTION_URI" env-required:"true"`
+	ConnectionURI string `env:"MONGO_CONNECTION_URI" env-default:"mongodb://root:admin@localhost:27017/"`
 	DatabaseName  string `yaml:"database-name" env-default:"quizzify-tests"`
 }
 
@@ -45,6 +46,10 @@ func MustLoad() *Config {
 
 	if cfgPath == "" {
 		cfgPath = os.Getenv("CONFIG_PATH")
+		if cfgPath == "" {
+			fmt.Println("config path is empty in all places. Using default value")
+			cfgPath = "configs/local.yaml"
+		}
 	}
 
 	cfg, err := loadFromPath(cfgPath)
