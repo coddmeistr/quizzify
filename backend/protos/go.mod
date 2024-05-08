@@ -8,7 +8,6 @@ require (
 )
 
 require (
-	connectrpc.com/connect v1.16.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect

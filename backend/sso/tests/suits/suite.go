@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	ssov1 "github.com/coddmeistr/quizzify-online-tests/backend/protos/gen/go/sso"
+	ssov1 "github.com/coddmeistr/quizzify-online-tests/backend/protos/proto/sso"
 	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/config"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

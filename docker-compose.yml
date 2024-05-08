@@ -44,6 +44,7 @@ services:
     restart: always
     labels:
       - traefik.http.routers.tests.rule=Host(`api.${BASE_DOMAIN}`)
+      - traefik.http.routers.tests.rule=PathPrefix(`/api`)
       - traefik.http.routers.tests.entrypoints=http
       - traefik.http.services.tests.loadbalancer.server.port=80
     depends_on:
@@ -64,10 +65,11 @@ services:
     build: ./backend/sso
     restart: always
     labels:
-      - traefik.http.routers.sso.rule=Host(`sso.${BASE_DOMAIN}`)
-      - traefik.http.routers.sso.entrypoints=grpc
-      - traefik.http.services.sso.loadbalancer.server.port=8000
-      - traefik.http.services.sso.loadbalancer.server.scheme=h2c
+      #- traefik.http.routers.tests.rule=Host(`api.${BASE_DOMAIN}`)
+      - traefik.http.routers.sso.rule=PathPrefix(`/sso`)
+      - traefik.http.routers.sso.entrypoints=http
+      - traefik.http.services.sso.loadbalancer.server.port=8001
+      #- traefik.http.services.sso.loadbalancer.server.scheme=h2c
     depends_on:
       - postgres
     networks:
