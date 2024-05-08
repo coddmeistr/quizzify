@@ -15,7 +15,7 @@ type AnswerModel struct {
 
 // FlexParamsModel represents flex parameters for test type 'test'
 // Each field in variants must have it's params to calculate answers based on user's choices
-// Each field numbericly increasing or decreasing one or more parameters and
+// Each field numerically increasing or decreasing one or more parameters and
 // At the end we get final numeric representation for each parameter and based on that we calculating final result
 type FlexParamsModel struct {
 	FieldID int           `json:"id" bson:"id"`
