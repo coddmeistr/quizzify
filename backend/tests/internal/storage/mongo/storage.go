@@ -41,7 +41,7 @@ func (s *Storage) SaveUserResult(ctx context.Context, result domain.Result) erro
 func (s *Storage) GetTests(ctx context.Context) ([]*domain.Test, error) {
 	const op = "mongo.storage.GetTests"
 
-	opt := options.Find().SetProjection(getProjectionForAnwers())
+	opt := options.Find().SetProjection(getProjectionForAnswers())
 
 	tests := make([]*domain.Test, 0)
 	cursor, err := s.db.Collection(testsCollection).Find(ctx, bson.D{}, opt)
@@ -90,7 +90,7 @@ func (s *Storage) GetTestByID(ctx context.Context, testID string, includeAnswers
 
 	opt := options.FindOne()
 	if !includeAnswers {
-		opt.SetProjection(getProjectionForAnwers())
+		opt.SetProjection(getProjectionForAnswers())
 	}
 
 	var test domain.Test
