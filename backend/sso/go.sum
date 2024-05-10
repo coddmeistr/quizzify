@@ -7,8 +7,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/brianvoe/gofakeit/v6 v6.28.0 h1:Xib46XXuQfmlLS2EXRuJpqcw8St6qSZz75OUo0tgAW4=
 github.com/brianvoe/gofakeit/v6 v6.28.0/go.mod h1:Xj58BMSnFqcn/fAQeSK+/PLtC5kSb7FJIq4JyGa8vEs=
-github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510183646-4c6a9648670d h1:/KMbdhwx0J/Ymq9Babsj0ZW3RBVJtECjyZuowWfWfbQ=
-github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510183646-4c6a9648670d/go.mod h1:n86grS5qlMkznJFqatWwA1rfnCdmxKOxGEuRXsTi+MQ=
+github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510185707-6cd57b046195 h1:YGhdtwDwTAMkYAWRxwHRIgZYPGFPPN7peX97OVc27jA=
+github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510185707-6cd57b046195/go.mod h1:C5J11OtU47Q04IpnEM4QGy6HkwgWnNrQZwviUGFEB9M=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
