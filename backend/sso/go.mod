@@ -4,7 +4,8 @@ go 1.21.1
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
-	github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240508210100-057339e19980
+	github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510183646-4c6a9648670d
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
 	github.com/jackc/pgx/v5 v5.5.3
 	github.com/stretchr/testify v1.8.3
 	golang.org/x/crypto v0.19.0
@@ -15,7 +16,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
