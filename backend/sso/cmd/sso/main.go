@@ -9,8 +9,8 @@ import (
 
 	"log/slog"
 
-	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/app"
-	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/config"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/app"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/config"
 	"github.com/joho/godotenv"
 )
 

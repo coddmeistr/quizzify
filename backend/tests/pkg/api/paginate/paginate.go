@@ -2,7 +2,7 @@ package paginate
 
 import (
 	"context"
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/api"
+	"github.com/coddmeistr/quizzify/backend/tests/pkg/api"
 	"net/http"
 	"strconv"
 )

@@ -1,7 +1,7 @@
 package testshandlers
 
 import (
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/domain"
+	"github.com/coddmeistr/quizzify/backend/tests/internal/domain"
 )
 
 type ApplyTestRequest struct {

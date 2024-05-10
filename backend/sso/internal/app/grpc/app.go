@@ -11,13 +11,13 @@ import (
 
 	"log/slog"
 
-	authgrpc "github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/grpc/auth"
-	permissionsgrpc "github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/grpc/permissions"
-	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/services/auth"
-	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/services/permissions"
+	authgrpc "github.com/coddmeistr/quizzify/backend/sso/internal/grpc/auth"
+	permissionsgrpc "github.com/coddmeistr/quizzify/backend/sso/internal/grpc/permissions"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/services/auth"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/services/permissions"
 	"google.golang.org/grpc"
 
-	gw "github.com/coddmeistr/quizzify-online-tests/backend/protos/proto/sso"
+	gw "github.com/coddmeistr/quizzify/backend/protos/proto/sso"
 )
 
 const gatewayPort = ":8001"

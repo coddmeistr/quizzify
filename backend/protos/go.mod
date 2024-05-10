@@ -1,4 +1,4 @@
-module github.com/coddmeistr/quizzify-online-tests/backend/protos
+module github.com/coddmeistr/quizzify/backend/protos
 
 go 1.21.1
 

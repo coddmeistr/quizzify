@@ -1,8 +1,8 @@
 package testshandlers
 
 import (
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/config"
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/internal/transport/http"
+	"github.com/coddmeistr/quizzify/backend/tests/internal/config"
+	"github.com/coddmeistr/quizzify/backend/tests/internal/transport/http"
 	"github.com/go-playground/validator/v10"
 )
 

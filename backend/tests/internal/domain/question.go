@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/slice"
+	"github.com/coddmeistr/quizzify/backend/tests/pkg/slice"
 )
 
 type Question struct {

@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"encoding/json"
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/slice"
+	"github.com/coddmeistr/quizzify/backend/tests/pkg/slice"
 	"net/http"
 )
 

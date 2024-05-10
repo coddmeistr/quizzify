@@ -2,10 +2,10 @@ package tests
 
 import (
 	"encoding/json"
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/api"
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/pkg/numbers"
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/tests/helpers"
-	"github.com/coddmeistr/quizzify-online-tests/backend/tests/tests/suits"
+	"github.com/coddmeistr/quizzify/backend/tests/pkg/api"
+	"github.com/coddmeistr/quizzify/backend/tests/pkg/numbers"
+	"github.com/coddmeistr/quizzify/backend/tests/tests/helpers"
+	"github.com/coddmeistr/quizzify/backend/tests/tests/suits"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"

@@ -3,7 +3,7 @@ package appjwt
 import (
 	"time"
 
-	"github.com/coddmeistr/quizzify-online-tests/backend/sso/internal/domain/models"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/domain/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 

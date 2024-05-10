@@ -4,7 +4,7 @@ api:
 accessLog: {}
 providers:
   docker:
-    network: quizzify-online-tests_proxy
+    network: quizzify_proxy
 entryPoints:
   http:
     address: ":80"
