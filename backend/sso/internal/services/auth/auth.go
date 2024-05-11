@@ -14,6 +14,7 @@ import (
 )
 
 type UserProvider interface {
+	UserByID(ctx context.Context, id uint64) (models.User, error)
 	UserByLogin(ctx context.Context, login string) (models.User, error)
 	UserByEmail(ctx context.Context, email string) (models.User, error)
 	IsAdmin(ctx context.Context, userID uint64) (bool, error)
@@ -64,6 +65,29 @@ func New(
 	}
 }
 
+func (a *Auth) UserInfo(ctx context.Context, userID uint64) (models.User, []int, error) {
+	const op = "auth.UserInfo"
+	log := a.log.With(
+		slog.String("op", op),
+		slog.Int("user_id", int(userID)),
+	)
+	log.Info("getting user info")
+
+	user, err := a.usrProvider.UserByID(ctx, userID)
+	if err != nil {
+		log.Error("failed getting user info", slog.String("error", err.Error()))
+		return models.User{}, nil, err
+	}
+
+	perms, err := a.permsProvider.UserPermissions(ctx, int64(userID))
+	if err != nil {
+		log.Error("failed getting user permissions", slog.String("error", err.Error()))
+		return models.User{}, nil, err
+	}
+
+	return user, perms, nil
+}
+
 func (a *Auth) Login(ctx context.Context, login string, email string, password string, appID int) (token string, err error) {
 	const op = "auth.Login"
 	log := a.log.With(
@@ -98,7 +122,8 @@ func (a *Auth) Login(ctx context.Context, login string, email string, password s
 	app, err := a.appProvider.App(ctx, appID)
 	if err != nil {
 		if errors.Is(err, storage.ErrAppNotFound) {
-			log.Warn("app not found. App logic is not implemented", slog.String("error", err.Error()))
+			log.Warn("app not found", slog.String("error", err.Error()))
+			return "", fmt.Errorf("%s: %w", op, err)
 		} else {
 			log.Error("failed getting current app", slog.String("error", err.Error()))
 			return "", fmt.Errorf("%s: %w", op, err)

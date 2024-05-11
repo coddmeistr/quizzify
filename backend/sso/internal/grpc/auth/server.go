@@ -3,6 +3,10 @@ package authgrpc
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/domain/models"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/storage"
+	"github.com/golang-jwt/jwt/v5"
 
 	ssov1 "github.com/coddmeistr/quizzify/backend/protos/proto/sso"
 	"github.com/coddmeistr/quizzify/backend/sso/internal/services/auth"
@@ -15,6 +19,11 @@ type Auth interface {
 	Login(ctx context.Context, login string, email string, password string, appID int) (token string, err error)
 	Register(ctx context.Context, login string, email string, password string) (userID uint64, err error)
 	IsAdmin(ctx context.Context, userID uint64) (bool, error)
+	UserInfo(ctx context.Context, userID uint64) (models.User, []int, error)
+}
+
+type AppProvider interface {
+	App(ctx context.Context, appID int) (models.App, error)
 }
 
 const (
@@ -23,11 +32,63 @@ const (
 
 type serverAPI struct {
 	ssov1.UnimplementedAuthServer
-	auth Auth
+	auth        Auth
+	appProvider AppProvider
 }
 
-func Register(gRPC *grpc.Server, auth Auth) {
-	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
+func Register(gRPC *grpc.Server, auth Auth, appProvider AppProvider) {
+	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth, appProvider: appProvider})
+}
+
+func (s *serverAPI) AccountInfo(ctx context.Context, req *ssov1.AccountInfoRequest) (*ssov1.AccountInfoResponse, error) {
+
+	app, err := s.appProvider.App(ctx, 1)
+	if err != nil {
+		if errors.Is(err, storage.ErrAppNotFound) {
+			return nil, status.Error(codes.Internal, err.Error())
+		} else {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+
+	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(app.Secret), nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, status.Error(codes.Internal, "invalid claims or token")
+	}
+
+	appID := int(claims["app_id"].(float64))
+	if appID != 1 {
+		return nil, status.Error(codes.Internal, "app ID is not 1(quizzify)")
+	}
+
+	uid := uint64(claims["uid"].(float64))
+	user, perms, err := s.auth.UserInfo(ctx, uid)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	pbPerms := make([]int32, 0)
+	for _, p := range perms {
+		pbPerms = append(pbPerms, int32(p))
+	}
+	return &ssov1.AccountInfoResponse{
+		UserId:      int64(user.ID),
+		Login:       user.Login,
+		Email:       user.Email,
+		IsAdmin:     false,
+		Permissions: pbPerms,
+		AppId:       int32(app.ID),
+	}, nil
 }
 
 func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (*ssov1.RegisterResponse, error) {

@@ -1,0 +1,1 @@
+INSERT INTO apps (id, name, secret) VALUES (1, 'quizzify-tests', 'local-secret-replace-me');

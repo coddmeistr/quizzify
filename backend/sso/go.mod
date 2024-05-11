@@ -4,7 +4,7 @@ go 1.21.1
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
-	github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510185707-6cd57b046195
+	github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240511125005-62c77bab166e
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
 	github.com/jackc/pgx/v5 v5.5.3
 	github.com/stretchr/testify v1.8.3

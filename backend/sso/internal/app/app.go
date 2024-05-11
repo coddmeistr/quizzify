@@ -30,7 +30,7 @@ func New(log *slog.Logger, grpcPort int, postgresURL string, tokenTTL time.Durat
 	permSrv := permissions.New(log, storage)
 
 	// Init gRPC app
-	grpcApp := grpcapp.New(log, authSrv, permSrv, grpcPort)
+	grpcApp := grpcapp.New(log, authSrv, permSrv, grpcPort, storage)
 
 	return &App{
 		GRPCApp: grpcApp,

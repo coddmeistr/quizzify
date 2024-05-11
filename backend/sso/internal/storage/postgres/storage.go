@@ -98,6 +98,20 @@ func (s *Storage) RemovePermission(ctx context.Context, userID int64, permID int
 	return nil
 }
 
+func (s *Storage) UserByID(ctx context.Context, id uint64) (models.User, error) {
+	const op = "storage.postgres.UserByID"
+
+	user := models.User{}
+	if err := s.db.QueryRow(ctx, "SELECT id, login, email, pass_hash FROM users WHERE id = $1", id).Scan(&user.ID, &user.Login, &user.Email, &user.PassHash); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return user, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+		}
+		return user, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
 func (s *Storage) SaveUser(ctx context.Context, login string, email string, passHash []byte) (uint64, error) {
 	const op = "storage.postgres.SaveUser"
 

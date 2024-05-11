@@ -3,6 +3,7 @@ package grpcapp
 import (
 	"context"
 	"fmt"
+	"github.com/coddmeistr/quizzify/backend/sso/internal/storage/postgres"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc/credentials/insecure"
 	"net"
@@ -54,10 +55,10 @@ func run(log *slog.Logger, grpcAddr string) error {
 	return http.ListenAndServe(gatewayPort, mux)
 }
 
-func New(log *slog.Logger, auth *auth.Auth, perm *permissions.Permissions, port int) *App {
+func New(log *slog.Logger, auth *auth.Auth, perm *permissions.Permissions, port int, appProv *postgres.Storage) *App {
 	gRPCServer := grpc.NewServer()
 
-	authgrpc.Register(gRPCServer, auth)
+	authgrpc.Register(gRPCServer, auth, appProv)
 	permissionsgrpc.Register(gRPCServer, perm)
 
 	return &App{
