@@ -19,6 +19,37 @@
     "application/json"
   ],
   "paths": {
+    "/sso/account": {
+      "get": {
+        "operationId": "Auth_AccountInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authAccountInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "token",
+            "description": "Token of the user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/sso/is_admin/{userId}": {
       "get": {
         "operationId": "Auth_IsAdmin",
@@ -189,6 +220,41 @@
     }
   },
   "definitions": {
+    "authAccountInfoResponse": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "int64",
+          "description": "User ID of the user."
+        },
+        "login": {
+          "type": "string",
+          "description": "Login of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email of the user."
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "description": "Permissions of the user."
+        },
+        "appId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "App ID of the user."
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Indicates whether the user is an admin."
+        }
+      }
+    },
     "authAddPermissionRequest": {
       "type": "object",
       "properties": {

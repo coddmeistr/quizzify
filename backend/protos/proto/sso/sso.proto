@@ -24,6 +24,11 @@ service Auth {
             get: "/sso/is_admin/{user_id}"
         };
     };
+    rpc AccountInfo (AccountInfoRequest) returns (AccountInfoResponse) {
+        option (google.api.http) = {
+            get: "/sso/account"
+        };
+    };
 }
 
 service Permission {
@@ -38,6 +43,20 @@ service Permission {
             delete: "/sso/{user_id}/permission/{permission_id}"
         };
     }
+}
+
+
+message AccountInfoRequest {
+    string token = 1; // Token of the user.
+}
+
+message AccountInfoResponse {
+    int64 user_id = 1; // User ID of the user.
+    string login = 2; // Login of the user.
+    string email = 3; // Email of the user.
+    repeated int32 permissions = 4; // Permissions of the user.
+    int32 app_id = 5; // App ID of the user.
+    bool is_admin = 6; // Indicates whether the user is an admin.
 }
 
 message AddPermissionRequest {
