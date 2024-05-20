@@ -20,6 +20,8 @@ type Auth interface {
 	Register(ctx context.Context, login string, email string, password string) (userID uint64, err error)
 	IsAdmin(ctx context.Context, userID uint64) (bool, error)
 	UserInfo(ctx context.Context, userID uint64) (models.User, []int, error)
+	DeleteAccount(ctx context.Context, userID uint64) error
+	AccountsList(ctx context.Context) ([]models.User, error)
 }
 
 type AppProvider interface {
@@ -38,6 +40,49 @@ type serverAPI struct {
 
 func Register(gRPC *grpc.Server, auth Auth, appProvider AppProvider) {
 	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth, appProvider: appProvider})
+}
+
+func (s *serverAPI) DeleteAccount(ctx context.Context, req *ssov1.DeleteAccountRequest) (*ssov1.DeleteAccountResponse, error) {
+
+	if err := s.auth.DeleteAccount(ctx, uint64(req.GetId())); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &ssov1.DeleteAccountResponse{
+		Deleted: true,
+	}, nil
+}
+
+func (s *serverAPI) AccountsList(ctx context.Context, req *ssov1.ListAccountsRequest) (*ssov1.ListAccountsResponse, error) {
+
+	users, err := s.auth.AccountsList(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	accounts := make([]*ssov1.AccountInfoResponse, 0)
+	for _, user := range users {
+		_, perms, err := s.auth.UserInfo(ctx, user.ID)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		pbPerms := make([]int32, 0)
+		for _, p := range perms {
+			pbPerms = append(pbPerms, int32(p))
+		}
+		accounts = append(accounts, &ssov1.AccountInfoResponse{
+			UserId:      int64(user.ID),
+			Login:       user.Login,
+			Email:       user.Email,
+			IsAdmin:     false,
+			Permissions: pbPerms,
+			AppId:       int32(1),
+		})
+	}
+
+	return &ssov1.ListAccountsResponse{
+		Accounts: accounts,
+	}, nil
 }
 
 func (s *serverAPI) AccountInfo(ctx context.Context, req *ssov1.AccountInfoRequest) (*ssov1.AccountInfoResponse, error) {

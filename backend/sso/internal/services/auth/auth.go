@@ -18,6 +18,8 @@ type UserProvider interface {
 	UserByLogin(ctx context.Context, login string) (models.User, error)
 	UserByEmail(ctx context.Context, email string) (models.User, error)
 	IsAdmin(ctx context.Context, userID uint64) (bool, error)
+	DeleteUser(ctx context.Context, userID uint64) error
+	ListUsers(ctx context.Context) ([]models.User, error)
 }
 
 type UserSaver interface {
@@ -63,6 +65,29 @@ func New(
 		appProvider:   appProvider,
 		tokenTTL:      tokenTTL,
 	}
+}
+
+func (a *Auth) AccountsList(ctx context.Context) ([]models.User, error) {
+	users, err := a.usrProvider.ListUsers(ctx)
+	return users, err
+}
+
+func (a *Auth) DeleteAccount(ctx context.Context, userID uint64) error {
+	const op = "auth.DeleteAccount"
+	log := a.log.With(
+		slog.String("op", op),
+		slog.Int("user_id", int(userID)),
+	)
+	log.Info("deleting user")
+
+	err := a.usrProvider.DeleteUser(ctx, userID)
+	if err != nil {
+		log.Error("failed deleting user", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("user deleted")
+	return nil
 }
 
 func (a *Auth) UserInfo(ctx context.Context, userID uint64) (models.User, []int, error) {

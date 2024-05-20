@@ -28,6 +28,51 @@ func New(connectionString string) (*Storage, error) {
 	return &Storage{db: pool}, nil
 }
 
+func (s *Storage) ListUsers(ctx context.Context) ([]models.User, error) {
+	const op = "storage.postgres.ListUsers"
+
+	users := []models.User{}
+	rows, err := s.db.Query(ctx, "SELECT id, login, email, pass_hash FROM users")
+	if err != nil {
+		return users, fmt.Errorf("%s: %w", op, err)
+	}
+
+	for rows.Next() {
+		var user models.User
+		if err = rows.Scan(&user.ID, &user.Login, &user.Email, &user.PassHash); err != nil {
+			return users, fmt.Errorf("%s: %w", op, err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (s *Storage) DeleteUser(ctx context.Context, userID uint64) error {
+	const op = "storage.postgres.DeleteUser"
+
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = tx.Exec(ctx, "DELETE FROM users WHERE id = $1", userID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = tx.Exec(ctx, "DELETE FROM user_permissions WHERE user_id = $1", userID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (s *Storage) UserPermissions(ctx context.Context, userID int64) ([]int, error) {
 	const op = "storage.postgres.UserPermissions"
 

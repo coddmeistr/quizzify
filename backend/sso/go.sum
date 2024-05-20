@@ -11,6 +11,10 @@ github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510185845-8d7eced7513a
 github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240510185845-8d7eced7513a/go.mod h1:C5J11OtU47Q04IpnEM4QGy6HkwgWnNrQZwviUGFEB9M=
 github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240511125005-62c77bab166e h1:XBmgJjK/HMY/4cbxMmdXcIMP3MzlDHUDHBCABUeMQFM=
 github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240511125005-62c77bab166e/go.mod h1:C5J11OtU47Q04IpnEM4QGy6HkwgWnNrQZwviUGFEB9M=
+github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240520002159-b711924cec73 h1:I5XnoMymQbTEQGMsqKsSOEtnwqeMcKwclDdg8W65xac=
+github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240520002159-b711924cec73/go.mod h1:C5J11OtU47Q04IpnEM4QGy6HkwgWnNrQZwviUGFEB9M=
+github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240520004025-f1cb40ee5f1b h1:hTcN3brTm7AEAHl6bYwsrA7Qt60FrYBlN+DCLmXm+RA=
+github.com/coddmeistr/quizzify/backend/protos v0.0.0-20240520004025-f1cb40ee5f1b/go.mod h1:C5J11OtU47Q04IpnEM4QGy6HkwgWnNrQZwviUGFEB9M=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
