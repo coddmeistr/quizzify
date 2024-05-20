@@ -71,7 +71,8 @@
             "description": "ID of the user to delete.",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "format": "int64"
           }
         ],
         "tags": [

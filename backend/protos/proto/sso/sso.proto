@@ -56,7 +56,7 @@ service Permission {
 }
 
 message DeleteAccountRequest {
-    string id = 1; // ID of the user to delete.
+    int64 id = 1; // ID of the user to delete.
 }
 message DeleteAccountResponse {
     bool deleted = 1; // Indicates if account was deleted.
