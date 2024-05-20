@@ -24,6 +24,7 @@ type Service interface {
 	GetTestByID(ctx context.Context, testID string, provideAnswers bool) (*domain.Test, error)
 	GetTests(ctx context.Context) ([]*domain.Test, error)
 	ApplyTest(ctx context.Context, testID string, UserID int, answers map[int]domain.UserAnswerModel) error
+	GetResults(ctx context.Context) ([]*domain.Result, error)
 }
 
 const (
@@ -33,6 +34,7 @@ const (
 	getTestsUrl          = "/tests"
 	getTestUrl           = "/tests/{test_id}"
 	applyTestUrl         = "/tests/{test_id}/apply"
+	getResultsUrl        = "/tests/results"
 )
 
 type Handlers struct {
@@ -65,6 +67,21 @@ func (h *Handlers) Register(router *mux.Router) {
 	auth.Methods(http.MethodPost).Path(createTestUrl).HandlerFunc(h.CreateTest)
 	auth.Methods(http.MethodPut).Path(updateTestPreviewUrl).HandlerFunc(h.UpdateTestPreview)
 	auth.Methods(http.MethodDelete).Path(deleteTestUrl).HandlerFunc(h.DeleteTest)
+	router.Methods(http.MethodGet).Path(getResultsUrl).HandlerFunc(h.GetResults)
+}
+
+func (h *Handlers) GetResults(w http.ResponseWriter, r *http.Request) {
+	const op = "tests.handlers.GetTest"
+	log := h.log.With(zap.String("op", op))
+
+	results, err := h.srv.GetResults(r.Context())
+	if err != nil {
+		log.Error("failed to get results", zap.Error(err))
+		ahttp.WriteError(w, ahttp.ErrInternal)
+		return
+	}
+
+	ahttp.WriteResponse(w, http.StatusOK, results)
 }
 
 func (h *Handlers) ApplyTest(w http.ResponseWriter, r *http.Request) {

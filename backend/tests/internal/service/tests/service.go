@@ -22,6 +22,7 @@ type Storage interface {
 	GetTestByID(ctx context.Context, testID string, includeAnswers bool) (*domain.Test, error)
 	GetTests(ctx context.Context) ([]*domain.Test, error)
 	SaveUserResult(ctx context.Context, result domain.Result) error
+	GetResults(ctx context.Context) ([]*domain.Result, error)
 }
 
 //go:generate mockery --name Validator
@@ -52,6 +53,19 @@ func New(log *zap.Logger, cfg *config.Config, storage Storage, validator Validat
 		storage:    storage,
 		validation: validator,
 	}
+}
+
+func (s *Service) GetResults(ctx context.Context) ([]*domain.Result, error) {
+	const op = "service.testsservice.GetResults"
+	log := s.log.With(zap.String("op", op))
+	log.Info("getting results")
+
+	results, err := s.storage.GetResults(ctx)
+	if err != nil {
+		log.Error("failed to get results", zap.Error(err))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return results, nil
 }
 
 func (s *Service) ApplyTest(ctx context.Context, testID string, UserID int, answers map[int]domain.UserAnswerModel) error {

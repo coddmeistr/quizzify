@@ -27,6 +27,22 @@ func New(db *mongo.Database) *Storage {
 	}
 }
 
+func (s *Storage) GetResults(ctx context.Context) ([]*domain.Result, error) {
+	const op = "mongo.storage.GetResults"
+
+	cur, err := s.db.Collection(resultsCollection).Find(ctx, bson.D{})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var results []*domain.Result
+	if err = cur.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return results, nil
+}
+
 func (s *Storage) SaveUserResult(ctx context.Context, result domain.Result) error {
 	const op = "mongo.storage.SaveUserResult"
 
