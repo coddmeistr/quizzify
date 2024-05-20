@@ -29,6 +29,16 @@ service Auth {
             get: "/sso/account"
         };
     };
+    rpc DeleteAccount (DeleteAccountRequest) returns (DeleteAccountResponse) {
+        option (google.api.http) = {
+            delete: "/sso/account"
+        };
+    };
+    rpc ListAccounts (ListAccountsRequest) returns (ListAccountsResponse) {
+        option (google.api.http) = {
+            get: "/sso/accounts"
+        };
+    };
 }
 
 service Permission {
@@ -43,6 +53,19 @@ service Permission {
             delete: "/sso/{user_id}/permission/{permission_id}"
         };
     }
+}
+
+message DeleteAccountRequest {
+    string id = 1; // ID of the user to delete.
+}
+message DeleteAccountResponse {
+    bool deleted = 1; // Indicates if account was deleted.
+}
+
+message ListAccountsRequest {}
+
+message ListAccountsResponse {
+    repeated AccountInfoResponse accounts = 1; // List of accounts.
 }
 
 

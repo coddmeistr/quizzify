@@ -48,6 +48,57 @@
         "tags": [
           "Auth"
         ]
+      },
+      "delete": {
+        "operationId": "Auth_DeleteAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authDeleteAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the user to delete.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/sso/accounts": {
+      "get": {
+        "operationId": "Auth_ListAccounts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/authListAccountsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/sso/is_admin/{userId}": {
@@ -279,12 +330,34 @@
         }
       }
     },
+    "authDeleteAccountResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean",
+          "description": "Indicates if account was deleted."
+        }
+      }
+    },
     "authIsAdminResponse": {
       "type": "object",
       "properties": {
         "isAdmin": {
           "type": "boolean",
           "description": "Indicates whether the user is an admin."
+        }
+      }
+    },
+    "authListAccountsResponse": {
+      "type": "object",
+      "properties": {
+        "accounts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/authAccountInfoResponse"
+          },
+          "description": "List of accounts."
         }
       }
     },
