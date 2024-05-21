@@ -2,15 +2,25 @@
   <v-app>
 
   <div class="header">
-    <div class="auth_buttons">
-      <v-btn class="auth_button">Войти</v-btn>
-      <v-btn class="auth_button">Регистрация</v-btn>
+
+    <div v-if="!isLoggedIn" class="auth_buttons">
+      <router-link to="/login">
+        <v-btn class="auth_button">Войти</v-btn>
+      </router-link>
+      <router-link to="/register">
+        <v-btn class="auth_button">Регистрация</v-btn>
+      </router-link>
+    </div>
+    <div v-else class="authenticated">
+      <span>{{userData.login}}</span>
+      <v-btn class="auth_button" @click="logout">Выйти</v-btn>
     </div>
   </div>
 
   <v-navigation-drawer
   app
   permanent
+  fixed
   :rail="isMenuMinimize"
   >
 
@@ -56,13 +66,24 @@
 
     <div style="height: 100%" id="drawer-menu-hover">
       <v-list-item prepend-icon="mdi-view-dashboard-variant" :to="{ name: 'Tests' }" title="Тесты" />
+
+      <v-list-subheader v-if="!isMenuMinimize && userData?.permissions?.includes(2)">Администрирование</v-list-subheader>
+      <v-list-item prepend-icon="mdi-view-dashboard-variant" :to="{ name: 'Accounts' }"
+                   v-if="userData?.permissions?.includes(2)"
+                   title="Аккаунты" />
+      <v-list-item prepend-icon="mdi-view-dashboard-variant" :to="{ name: 'TestsAdmin' }"
+                   v-if="userData?.permissions?.includes(2)"
+                   title="Тесты" />
+      <v-list-item prepend-icon="mdi-view-dashboard-variant" :to="{ name: 'Results' }"
+                   v-if="userData?.permissions?.includes(2)"
+                   title="Результаты" />
     </div>
   </v-list>
   </v-navigation-drawer>
 
-  <div>
+  <v-main>
     <router-view />
-  </div>
+  </v-main>
   </v-app>
 </template>
 
@@ -82,6 +103,10 @@
 .auth_button {
   margin-left: 10px;
 }
+
+.authenticated{
+  margin-right: 50px;
+}
 </style>
 
 
@@ -89,6 +114,9 @@
 import { ref, reactive } from "vue";
 import {red, teal} from "vuetify/util/colors";
 import config from "@/config"
+import { useStore } from "@/store";
+
+let store = useStore();
 export default {
   computed: {
     red() {
@@ -96,6 +124,12 @@ export default {
     },
     teal() {
       return teal
+    },
+    isLoggedIn() {
+      return store.getters["auth/isLoggedIn"]
+    },
+    userData(){
+      return store.getters["auth/userdata"]
     }
   },
   setup() {
@@ -139,9 +173,13 @@ export default {
             }
           });
     },
+    logout(){
+      store.dispatch("auth/logout");
+    }
   },
   mounted() {
     this.configureHoverOnMenu();
+    store.dispatch("auth/fetchUserData", { token: store.getters["auth/token"]});
   },
 }
 </script>

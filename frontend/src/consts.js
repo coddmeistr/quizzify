@@ -1,0 +1,1 @@
+export const BackendHost = "api.quizzify.local"
