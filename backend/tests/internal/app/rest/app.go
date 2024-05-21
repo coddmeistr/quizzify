@@ -15,6 +15,7 @@ import (
 	"github.com/coddmeistr/quizzify/backend/tests/pkg/api/sort"
 	"github.com/coddmeistr/quizzify/backend/tests/pkg/cors"
 	"github.com/coddmeistr/quizzify/backend/tests/pkg/metrics"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"net/http"
@@ -93,13 +94,17 @@ func (a *App) createServer() *http.Server {
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	a.testHandlers.Register(apiRouter)
 
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization", "Auth-User-Info"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "DELETE"})
+
 	addr := fmt.Sprintf("%s:%s", a.cfg.HTTPServer.Host, a.cfg.HTTPServer.Port)
 	srv := &http.Server{
 		Addr:         addr,
 		WriteTimeout: a.cfg.HTTPServer.Timeout,
 		ReadTimeout:  a.cfg.HTTPServer.Timeout,
 		IdleTimeout:  a.cfg.HTTPServer.IdleTimeout,
-		Handler:      router,
+		Handler:      handlers.CORS(headersOk, originsOk, methodsOk)(router),
 	}
 	a.server = srv
 

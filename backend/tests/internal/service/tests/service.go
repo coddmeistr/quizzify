@@ -239,7 +239,7 @@ func (s *Service) DeleteTest(ctx context.Context, testID string) error {
 	}
 
 	authUser, ok := user.AuthUserFromContext(ctx)
-	if !ok || (authUser.ID != *test.UserID && slice.MaxInt(authUser.Permissions) < user.Admin) {
+	if !ok || (authUser.ID != *test.UserID && slice.MaxInt(authUser.Permissions) < user.Moderator) {
 		log.Error("forbidden action")
 		return fmt.Errorf("%s: %w", op, ErrNoRights)
 	}

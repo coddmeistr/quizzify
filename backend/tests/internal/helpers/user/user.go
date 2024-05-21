@@ -43,6 +43,7 @@ func AuthMiddleware(lowestRoleForIndependentAccess int) func(http.Handler) http.
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+
 			if authUserInfo.ID == 0 || slice.MaxInt(authUserInfo.Permissions) < lowestRoleForIndependentAccess {
 				w.WriteHeader(http.StatusForbidden)
 				return
