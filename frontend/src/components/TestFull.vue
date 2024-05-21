@@ -20,7 +20,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn :to="{ path: `/tests/${id}` }" color="primary">Начать тест</v-btn>
+        <v-btn @click="action" color="primary">Начать тест</v-btn>
       </v-card-actions>
   </v-card>
   </div>

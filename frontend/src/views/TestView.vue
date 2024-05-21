@@ -3,7 +3,7 @@
     <TestFull v-if="test.id && test.id !== ''"
         :key="test.id"
         v-bind="test"
-        @action="alert('action')"
+        @action="startTest(test.id)"
         :id = "test.id"
         :title = "test.title"
         :shortText = test.short_text
@@ -36,6 +36,11 @@ export default {
       return store.getters["tests/test"]
     }
   },
+  methods: {
+    startTest(testId) {
+      this.$router.push({name: 'TestAnswering', params: {testId: testId}})
+    }
+  }
 }
 </script>
 

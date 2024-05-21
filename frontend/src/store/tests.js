@@ -74,6 +74,20 @@ export default {
                     })
             });
         },
+        sendResult(_, {test_id, answers}) {
+            return new Promise((resolve, reject) => {
+                getAxios()
+                    .post(`/api/tests/${test_id}/apply`, {user_answers: answers}, getAuthConfig())
+                    .then((response) => {
+                        resolve(response)
+                        alert("Результат сохранен")
+                    })
+                    .catch((error) => {
+                        alert("Ошибка сохранения результата")
+                        reject(error)
+                    })
+            });
+        },
     },
     getters: {
         tests(state) {
