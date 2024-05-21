@@ -9,7 +9,7 @@ services:
       - traefik.http.routers.api.service=api@internal
     ports:
       - "80:80"
-      - "8000:8000"
+      - "8001:8001"
     volumes:
       - ./traefik.yml:/traefik.yml
       - /var/run/docker.sock:/var/run/docker.sock
