@@ -20,17 +20,21 @@ export default {
     },
     actions: {
         getTest({commit}, id) {
-            return new Promise((resolve, reject) => {
-                getAxios()
-                    .get("/api/tests/" + id, getAuthConfig())
-                    .then((response) => {
-                        commit("setTest", response.data.payload)
-                        resolve(response)
-                    })
-                    .catch((error) => {
-                        reject(error)
-                    })
-            });
+            try {
+                return new Promise((resolve, reject) => {
+                    getAxios()
+                        .get("/api/tests/" + id, getAuthConfig())
+                        .then((response) => {
+                            commit("setTest", response.data.payload)
+                            resolve(response)
+                        })
+                        .catch((error) => {
+                            reject(error)
+                        })
+                });
+            } catch (e) {
+                console.log(e)
+            }
         },
         deleteTest(_, id) {
             return new Promise((resolve, reject) => {

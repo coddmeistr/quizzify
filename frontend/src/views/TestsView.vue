@@ -8,8 +8,8 @@
             @action="displayFullTest"
             :id = "test.id"
             :title = "test.title"
-            :shortText = test.shortText
-            :questionsCount = "test.questionsCount">
+            :shortText = test.short_text
+            :questionsCount = "test.questions.length">
         ></test-short>
       </v-col>
     </v-row>
@@ -18,43 +18,25 @@
 
 <script>
 import TestShort from "@/components/TestShort.vue";
+import {useStore} from "@/store";
+
+let store = useStore();
 
 export default {
   components: {TestShort},
-  data() {
-    return {
-      tests: [
-        {
-          id: 1,
-          title: "Тест 1",
-          shortText: "Тест по сексу",
-          questionsCount: 5
-        },
-        {
-          id: 10,
-          title: "Тест 2",
-          shortText: "Тест по математике",
-          questionsCount: 1
-        },
-        {
-          id: 11,
-          title: "Тест 3",
-          shortText: "Тест по математике",
-          questionsCount: 2
-        },
-        {
-          id: 12,
-          title: "Тест 4",
-          shortText: "Тест по математике",
-          questionsCount: 3
-        }
-      ]
+  computed:{
+    tests(){
+      return store.getters["tests/tests"]
     }
+  },
+
+  mounted() {
+    store.dispatch("tests/getTests")
   },
 
   methods: {
     displayFullTest(testId) {
-      alert(testId)
+      this.$router.push({name: 'TestFull', params: {testId: testId}})
     },
     getTestsRows(){
       const inOneRow = 3

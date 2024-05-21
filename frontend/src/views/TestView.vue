@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <TestFull v-if="test.id && test.id !== ''"
         :key="test.id"
         v-bind="test"
@@ -39,6 +39,13 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
+
+.container{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 100px;
+}
 
 </style>
