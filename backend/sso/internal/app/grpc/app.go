@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/coddmeistr/quizzify/backend/sso/internal/storage/postgres"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/rs/cors"
 	"google.golang.org/grpc/credentials/insecure"
 	"net"
 	"net/http"
@@ -52,7 +53,8 @@ func run(log *slog.Logger, grpcAddr string) error {
 
 	// Start HTTP server (and proxy calls to gRPC server endpoint)
 	log.Info("gRPC Gateway is listening on port " + gatewayPort)
-	return http.ListenAndServe(gatewayPort, mux)
+	handler := cors.AllowAll().Handler(mux)
+	return http.ListenAndServe(gatewayPort, handler)
 }
 
 func New(log *slog.Logger, auth *auth.Auth, perm *permissions.Permissions, port int, appProv *postgres.Storage) *App {

@@ -53,7 +53,7 @@ func (s *serverAPI) DeleteAccount(ctx context.Context, req *ssov1.DeleteAccountR
 	}, nil
 }
 
-func (s *serverAPI) AccountsList(ctx context.Context, req *ssov1.ListAccountsRequest) (*ssov1.ListAccountsResponse, error) {
+func (s *serverAPI) ListAccounts(ctx context.Context, req *ssov1.ListAccountsRequest) (*ssov1.ListAccountsResponse, error) {
 
 	users, err := s.auth.AccountsList(ctx)
 	if err != nil {
