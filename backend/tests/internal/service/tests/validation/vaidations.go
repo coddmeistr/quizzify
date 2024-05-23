@@ -294,8 +294,8 @@ func (val *Validation) validateFields(fs []*domain.CommonField) bool {
 			log.Error("field is null")
 			return false
 		}
-		if v.FieldID <= 0 {
-			log.Error("FieldID is 0 or less")
+		if v.FieldID < 0 {
+			log.Error("FieldID is less then zero")
 			return false
 		}
 		if _, ok := met[v.FieldID]; ok {
@@ -316,8 +316,8 @@ func (val *Validation) validateAnswers(a *domain.AnswerModel) bool {
 		return false
 	}
 
-	if a.CorrectID != nil && *a.CorrectID <= 0 {
-		log.Error("CorrectID 0 or less")
+	if a.CorrectID != nil && *a.CorrectID < 0 {
+		log.Error("CorrectID is less than zero")
 		return false
 	}
 
