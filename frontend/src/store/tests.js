@@ -1,4 +1,4 @@
-import {getAxios, getAuthConfig} from "@/api";
+import {getAxios, getAuthConfig,getUserData} from "@/api";
 
 export default {
     namespaced: true,
@@ -84,6 +84,22 @@ export default {
                     })
                     .catch((error) => {
                         alert("Ошибка сохранения результата")
+                        reject(error)
+                    })
+            });
+        },
+        createTest(_, {test}) {
+            return new Promise((resolve, reject) => {
+                let userdata = getUserData();
+                test.creator_id = parseInt(userdata.userId)
+                getAxios()
+                    .post(`/api/tests`, {...test}, getAuthConfig())
+                    .then((response) => {
+                        resolve(response)
+                        alert("Тест успешно создан")
+                    })
+                    .catch((error) => {
+                        alert("Ошибка создания теста")
                         reject(error)
                     })
             });

@@ -66,6 +66,7 @@
 
     <div style="height: 100%" id="drawer-menu-hover">
       <v-list-item prepend-icon="mdi-view-dashboard-variant" :to="{ name: 'Tests' }" title="Тесты" />
+      <v-list-item prepend-icon="mdi-plus" :to="{ name: 'TestCreating' }" title="Создать тест" />
 
       <v-list-subheader v-if="!isMenuMinimize && userData?.permissions?.includes(2)">Администрирование</v-list-subheader>
       <v-list-item prepend-icon="mdi-view-dashboard-variant" :to="{ name: 'Accounts' }"

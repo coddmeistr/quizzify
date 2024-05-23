@@ -29,3 +29,10 @@ export function getAuthConfig(){
         }
     }
 }
+
+export function getUserData(){
+    let store = useStore();
+    let userdata = store.getters["auth/userdata"];
+    if (!userdata || !userdata.userId) return {};
+    return userdata
+}
