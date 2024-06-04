@@ -63,7 +63,7 @@ export default {
         },
         getResults({commit}) {
             return new Promise((resolve, reject) => {
-                getAxios
+                getAxios()
                     .get("/api/tests/results")
                     .then((response) => {
                         commit("setResults", response.data.payload)

@@ -39,7 +39,7 @@ const routes = [
   {
     path: "/results",
     name: "Results",
-    component: () => import("../views/AccountsView.vue"),
+    component: () => import("../views/ResultsView.vue"),
     meta: {
       requireLogin: true,
     },

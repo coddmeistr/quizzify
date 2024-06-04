@@ -47,7 +47,7 @@
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="primary" @click="tryRegister" :loading="loginLoading">
-                Login
+                Register
               </v-btn>
             </v-card-actions>
           </v-card>
